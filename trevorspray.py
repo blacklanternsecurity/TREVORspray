@@ -79,7 +79,7 @@ def main(options):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Sprays O365 and can round-robin through SSH proxies')
+    parser = argparse.ArgumentParser(description='Have fun spraying O365 through SSH proxies')
 
     parser.add_argument('-e', '--emails', nargs='+', required=True, help='Emails(s) and/or file(s) filled with emails')
     parser.add_argument('-p', '--passwords', nargs='+', required=True, help='Password(s) that will be used to perform the password spray')
