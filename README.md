@@ -45,9 +45,9 @@ $ trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1 -kp
 ```
 $ ./trevorspray.py --help
 usage: trevorspray.py [-h] -e EMAILS [EMAILS ...] -p PASSWORDS [PASSWORDS ...] [-f] [-d DELAY] [--url URL] [-v] [-s SSH [SSH ...]] [-k KEY] [-kp]
-                       [--base-port BASE_PORT]
+                      [--base-port BASE_PORT]
 
-Sprays O365 and can round-robin through SSH proxies
+Have fun spraying O365 through SSH proxies
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -59,7 +59,7 @@ optional arguments:
   -d DELAY, --delay DELAY
                         Sleep for this many seconds between requests
   --url URL             The URL to spray against (default is https://login.microsoft.com)
-  -v, --verbose         Prints emails that could exist in case of invalid password
+  -v, --verbose         Print extra debugging info
   -s SSH [SSH ...], --ssh SSH [SSH ...]
                         Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
   -k KEY, --key KEY     Use this SSH key when connecting to proxy hosts

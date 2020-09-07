@@ -86,7 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--force', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
     parser.add_argument('--url', default='https://login.microsoft.com', help='The URL to spray against (default is https://login.microsoft.com)')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Prints emails that could exist in case of invalid password')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Print extra debugging info')
     parser.add_argument('-s', '--ssh', default=[], nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
     parser.add_argument('-k', '--key', help='Use this SSH key when connecting to proxy hosts')
     parser.add_argument('-kp', '--key-pass', action='store_true', help='SSH key requires a password')
