@@ -4,7 +4,9 @@
 # TREVORspray
 A featureful Python O365 sprayer based on [MSOLSpray](https://github.com/dafthack/MSOLSpray) which uses the [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/overview)
 
-![trevorspray](https://user-images.githubusercontent.com/20261699/92336645-d80dae00-f070-11ea-919f-e3f42fc19112.png)
+By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
+
+![trevorspray](https://user-images.githubusercontent.com/20261699/92338226-e366d680-f07c-11ea-8664-7b320783dc98.png)
 
 Microsoft is getting better and better about blocking password spraying attacks against O365.  **TREVORspray can solve this by proxying its requests through an unlimited number of `--ssh` hosts**.  No weird dependencies or cumbersome setup required - all you need is a cloud VM with port 22 open.
 
