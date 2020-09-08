@@ -13,7 +13,7 @@ Microsoft is getting better and better about blocking password spraying attacks 
 CREDIT WHERE CREDIT IS DUE - MANY THANKS TO:
 - [@dafthack](https://twitter.com/dafthack) for writing [MSOLSpray](https://github.com/dafthack/MSOLSpray)
 - [@Mrtn9](https://twitter.com/Mrtn9) for his Python port of [MSOLSpray](https://github.com/MartinIngesen/MSOLSpray)
-- [@KnappySqwurl] for being a splunk wizard and showing me how heckin loud I was being :)
+- [@KnappySqwurl](https://twitter.com/KnappySqwurl) for being a splunk wizard and showing me how heckin loud I was being :)
 
 ## Features
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
