@@ -1,4 +1,5 @@
-
+import subprocess as sp
+from pathlib import Path
 
 
 
@@ -11,10 +12,10 @@ def files_to_list(l):
             with open(entry) as f:
                 for e in f.readlines():
                     e = e.strip('\r\n').lower()
-                    if e not in new_list:
+                    if e and e not in new_list:
                         new_list.append(e)
         except OSError:
-            if entry not in new_list:
+            if entry and entry not in new_list:
                 new_list.append(entry)
 
     return new_list
@@ -55,3 +56,17 @@ def read_file(filename):
         pass
 
     return final_list
+
+
+def ssh_key_encrypted(f=None):
+
+    if f is None:
+        f = Path.home() / '.ssh/id_rsa'
+
+    try:
+        p = sp.run(['ssh-keygen', '-y', '-P', '', '-f', str(f)], stdout=sp.DEVNULL, stderr=sp.PIPE)
+        if not 'incorrect' in p.stderr.decode():
+            return False
+    except:
+        pass
+    return True

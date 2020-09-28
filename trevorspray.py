@@ -15,7 +15,7 @@ from getpass import getpass
 from lib.msol import MSOLSpray
 
 
-log = logging.getLogger('trevospray.cli')
+log = logging.getLogger('trevorspray.cli')
 
 
 def main(options):
@@ -59,7 +59,7 @@ def main(options):
                     log.debug(f'Sleeping for {options.delay:,} seconds')
                 sleep(options.delay)
 
-            log.info(f'Finished spraying {len(options.emails):,} accounts at {time.ctime()}')
+            log.info(f'Finished spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
             for success in sprayer.valid_logins:
                 log.critical(success)
 
@@ -89,15 +89,15 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true', help='Print extra debugging info')
     parser.add_argument('-s', '--ssh', default=[], nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
     parser.add_argument('-k', '--key', help='Use this SSH key when connecting to proxy hosts')
-    parser.add_argument('-kp', '--key-pass', action='store_true', help='SSH key requires a password')
+    parser.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
 
     try:
 
         options = parser.parse_args()
 
-        if options.key_pass:
-            options.key_pass = getpass('Enter SSH key password: ')
+        if util.ssh_key_encrypted(options.key):
+            options.key_pass = getpass('SSH key password (press enter if none): ')
 
         # handle emails
         options.emails = util.files_to_list(options.emails)
@@ -116,7 +116,6 @@ if __name__ == '__main__':
             log.error(traceback.format_exc())
         else:
             log.error(f'Encountered error (-v to debug): {e}')
-
 
     except KeyboardInterrupt:
         log.error('Interrupted')
