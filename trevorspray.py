@@ -11,6 +11,7 @@ from lib import logger
 from time import sleep
 from lib.proxy import *
 from lib.errors import *
+from shutil import which
 from getpass import getpass
 from lib.msol import MSOLSpray
 
@@ -28,7 +29,8 @@ def main(options):
         hosts=options.ssh,
         key=options.key,
         key_pass=options.key_pass,
-        base_port=options.base_port
+        base_port=options.base_port,
+        current_ip=(not options.no_current_ip)
     )
 
     for password in options.passwords:
@@ -85,18 +87,29 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--passwords', nargs='+', required=True, help='Password(s) that will be used to perform the password spray')
     parser.add_argument('-f', '--force', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
-    parser.add_argument('--url', default='https://login.microsoft.com', help='The URL to spray against (default is https://login.microsoft.com)')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Print extra debugging info')
+    parser.add_argument('-u', '--url', default='https://login.microsoft.com', help='The URL to spray against (default is https://login.microsoft.com)')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Show which proxy is being used for each request')
     parser.add_argument('-s', '--ssh', default=[], nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
     parser.add_argument('-k', '--key', help='Use this SSH key when connecting to proxy hosts')
     parser.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
-    parser.add_argument('--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
+    parser.add_argument('-b', '--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
+    parser.add_argument('-n', '--no-current-ip', action='store_true', help='Don\'t spray from the current IP, only use SSH proxies')
 
     try:
 
         options = parser.parse_args()
 
-        if util.ssh_key_encrypted(options.key):
+        if options.no_current_ip and not options.ssh:
+            log.error('Cannot specify --no-current-ip without giving --ssh hosts')
+            sys.exit(1)
+
+        # make sure executables exist
+        for binary in SSHLoadBalancer.dependencies:
+            if not which(binary):
+                log.error(f'Please install {binary}')
+                sys.exit(1)
+
+        if options.ssh and util.ssh_key_encrypted(options.key):
             options.key_pass = getpass('SSH key password (press enter if none): ')
 
         # handle emails

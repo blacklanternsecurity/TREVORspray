@@ -1,8 +1,9 @@
 ![trevor](https://user-images.githubusercontent.com/20261699/92336575-27071380-f070-11ea-8dd4-5ba42c7d04b7.jpeg)
 `#trevorforget`
 
-# TREVORspray
-A featureful Python O365 sprayer based on [MSOLSpray](https://github.com/dafthack/MSOLSpray) which uses the [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/overview)
+# TREVORproxy and TREVORspray
+TREVORproxy is a SOCKS proxy that round-robins requests through SSH hosts.
+TREVORspray is a A featureful Python O365 sprayer based on [MSOLSpray](https://github.com/dafthack/MSOLSpray) which uses the [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/overview)
 
 By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
@@ -42,11 +43,10 @@ $ trevorspray.py -e bob@evilcorp.com -p Fall2020! --delay 5
 $ trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1 -kp
 ```
 
-## Help:
+## TREVORspray - Help:
 ```
 $ ./trevorspray.py --help
-usage: trevorspray.py [-h] -e EMAILS [EMAILS ...] -p PASSWORDS [PASSWORDS ...] [-f] [-d DELAY] [--url URL] [-v] [-s SSH [SSH ...]] [-k KEY] [-kp]
-                      [--base-port BASE_PORT]
+usage: trevorspray.py [-h] -e EMAILS [EMAILS ...] -p PASSWORDS [PASSWORDS ...] [-f] [-d DELAY] [-u URL] [-v] [-s SSH [SSH ...]] [-k KEY] [-b BASE_PORT] [-n]
 
 Have fun spraying O365 through SSH proxies
 
@@ -59,16 +59,37 @@ optional arguments:
   -f, --force           Forces the spray to continue and not stop when multiple account lockouts are detected
   -d DELAY, --delay DELAY
                         Sleep for this many seconds between requests
-  --url URL             The URL to spray against (default is https://login.microsoft.com)
-  -v, --verbose         Print extra debugging info
+  -u URL, --url URL     The URL to spray against (default is https://login.microsoft.com)
+  -v, --verbose         Show which proxy is being used for each request
   -s SSH [SSH ...], --ssh SSH [SSH ...]
                         Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
   -k KEY, --key KEY     Use this SSH key when connecting to proxy hosts
-  -kp, --key-pass       SSH key requires a password
-  --base-port BASE_PORT
+  -b BASE_PORT, --base-port BASE_PORT
                         Base listening port to use for SOCKS proxies
+  -n, --no-current-ip   Don't spray from the current IP, only use SSH proxies
 ```
 
 ## Known Limitations:
 - Untested on Windows
-- Only works against the M$ Graph API (right now at least)
+- Currently only works against the M$ Graph API
+
+## TREVORproxy - Help:
+```
+$ ./trevorproxy.py --help
+usage: trevorproxy.py [-h] [-p PORT] [-l LISTEN_ADDRESS] [-v] [-k KEY] [--base-port BASE_PORT] ssh_hosts [ssh_hosts ...]
+
+Spin up an automatic round-robin socks proxy using SSH
+
+positional arguments:
+  ssh_hosts             Round-robin load-balance through these SSH hosts (user@host)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PORT, --port PORT  Port for SOCKS server to listen on (default: 1080)
+  -l LISTEN_ADDRESS, --listen-address LISTEN_ADDRESS
+                        Listen address for SOCKS server (default: 127.0.0.1)
+  -v, --verbose         Print extra debugging info
+  -k KEY, --key KEY     Use this SSH key when connecting to proxy hosts
+  --base-port BASE_PORT
+                        Base listening port to use for SOCKS proxies
+```

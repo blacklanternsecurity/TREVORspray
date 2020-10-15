@@ -9,7 +9,7 @@ log = logging.getLogger('trevorspray.msol')
 
 class MSOLSpray:
 
-    def __init__(self, emails, password, url, skip_logins=None, load_balancer=None, force=False, proxies=None, verbose=False):
+    def __init__(self, emails, password, url, skip_logins=None, load_balancer=None, force=False, verbose=False):
 
         self.emails = list(emails)
         self.password = password
@@ -29,7 +29,7 @@ class MSOLSpray:
             self.skip_logins = skip_logins
 
 
-    def spray(self, proxy=None):
+    def spray(self):
 
         for i,email in enumerate(self.emails):
 
