@@ -48,7 +48,7 @@ $ trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1 -kp
 $ ./trevorspray.py --help
 usage: trevorspray.py [-h] -e EMAILS [EMAILS ...] -p PASSWORDS [PASSWORDS ...] [-f] [-d DELAY] [-u URL] [-v] [-s SSH [SSH ...]] [-k KEY] [-b BASE_PORT] [-n]
 
-Have fun spraying O365 through SSH proxies
+Execute password sprays against O365, optionally proxying the traffic through SSH hosts
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -78,7 +78,7 @@ optional arguments:
 $ ./trevorproxy.py --help
 usage: trevorproxy.py [-h] [-p PORT] [-l LISTEN_ADDRESS] [-v] [-k KEY] [--base-port BASE_PORT] ssh_hosts [ssh_hosts ...]
 
-A SOCKS proxy which round-robins requests through the specified SSH hosts
+Spawns a SOCKS server which round-robins requests through the specified SSH hosts
 
 positional arguments:
   ssh_hosts             Round-robin load-balance through these SSH hosts (user@host)
