@@ -78,7 +78,7 @@ optional arguments:
 $ ./trevorproxy.py --help
 usage: trevorproxy.py [-h] [-p PORT] [-l LISTEN_ADDRESS] [-v] [-k KEY] [--base-port BASE_PORT] ssh_hosts [ssh_hosts ...]
 
-Spin up an automatic round-robin socks proxy using SSH
+A SOCKS proxy which round-robins requests through the specified SSH hosts
 
 positional arguments:
   ssh_hosts             Round-robin load-balance through these SSH hosts (user@host)

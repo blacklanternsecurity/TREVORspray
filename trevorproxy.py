@@ -48,7 +48,7 @@ def main(options):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Spin up an automatic round-robin socks proxy using SSH')
+    parser = argparse.ArgumentParser(description='Spawns a SOCKS server which round-robins requests through the specified SSH hosts')
 
     parser.add_argument('ssh_hosts', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host)')
     parser.add_argument('-p', '--port', type=int, default=1080, help='Port for SOCKS server to listen on (default: 1080)')
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true', help='Print extra debugging info')
     parser.add_argument('-k', '--key', help='Use this SSH key when connecting to proxy hosts')
     parser.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
-    parser.add_argument('--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
+    parser.add_argument('--base-port', default=32482, type=int, help='Base listening port to use for SOCKS proxies')
 
     try:
 
