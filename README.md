@@ -40,7 +40,7 @@ $ trevorspray.py -e bob@evilcorp.com -p Fall2020! --delay 5
 
 ## Example: Spray O365 and round-robin between 3 IPs (the current IP is used as well.)
 ```
-$ trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1 -kp
+$ trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1
 ```
 
 ## TREVORspray - Help:
