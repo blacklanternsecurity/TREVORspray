@@ -1,9 +1,9 @@
 ![trevor](https://user-images.githubusercontent.com/20261699/92336575-27071380-f070-11ea-8dd4-5ba42c7d04b7.jpeg)
+
 `#trevorforget`
 
-# TREVORproxy and TREVORspray
-TREVORproxy is a SOCKS proxy that round-robins requests through SSH hosts.
-TREVORspray is a A featureful Python O365 sprayer based on [MSOLSpray](https://github.com/dafthack/MSOLSpray) which uses the [Microsoft Graph API](https://docs.microsoft.com/en-us/graph/overview)
+# TREVORspray
+TREVORspray is a featureful Microsoft Online sprayer based on [MSOLSpray](https://github.com/dafthack/MSOLSpray) 
 
 By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
@@ -18,12 +18,12 @@ CREDIT WHERE CREDIT IS DUE - MANY THANKS TO:
 
 ## Features
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
-- Automatic cancel/resume (attempted user/pass combos are remembered in `./logs/tried_logins.txt`)
+- Automatic cancel/resume (remembers already-tried user/pass combos in `~/.trevorspray/tried_logins.txt`)
 - Round-robin proxy through multiple IPs using only vanilla `--ssh`
 - Automatic infinite reconnect/retry if a proxy goes down (or if you lose internet)
 - Spoofs `User-Agent` and `client_id` to look like legitimate auth traffic
-- Logs everything to `./logs/trevorspray.log`
-- Saves valid usernames to `./logs/valid_usernames.txt`
+- Logs everything to `~/.trevorspray/trevorspray.log`
+- Saves valid usernames to `~/.trevorspray/valid_usernames.txt`
 - Optional `--delay` between request to bypass M$ lockout countermeasures
 
 ## Installation:
@@ -33,12 +33,17 @@ $ cd trevorspray
 $ pip install -r requirements.txt
 ```
 
-## Example: Spray O365 with 5-second delay between requests
+## Example: Perform recon against a domain (retrieves tenant information, autodiscover info, mx records, etc.)
+```
+$ trevorspray.py --recon evilcorp.com
+```
+
+## Example: Spray with 5-second delay between requests
 ```
 $ trevorspray.py -e bob@evilcorp.com -p Fall2020! --delay 5
 ```
 
-## Example: Spray O365 and round-robin between 3 IPs (the current IP is used as well.)
+## Example: Spray and round-robin between 3 IPs (the current IP is used as well.)
 ```
 $ trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1
 ```
@@ -71,7 +76,10 @@ optional arguments:
 
 ## Known Limitations:
 - Untested on Windows
-- Currently only works against the M$ Graph API
+
+
+# TREVORproxy
+TREVORproxy is a SOCKS proxy that round-robins requests through SSH hosts. Note that TREVORspray already has its own proxy feature (`--ssh`), so this is for use with curl, Burpsuite, etc.
 
 ## TREVORproxy - Help:
 ```
