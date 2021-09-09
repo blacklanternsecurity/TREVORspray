@@ -1,6 +1,13 @@
 import subprocess as sp
 from pathlib import Path
+from pygments import highlight
+from pygments.lexers.data import JsonLexer
+from pygments.formatters import TerminalFormatter
 
+
+def highlight_json(j):
+
+    return highlight(j, JsonLexer(), TerminalFormatter())
 
 
 def files_to_list(l):

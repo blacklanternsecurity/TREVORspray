@@ -33,7 +33,7 @@ class MSOLSpray:
 
         for i,email in enumerate(self.emails):
 
-            login_combo = f'{email}:{self.password}'
+            login_combo = f'{self.url}:{email}:{self.password}'
 
             if login_combo in self.skip_logins:
                 log.info(f'Already tried {login_combo}, skipping')
@@ -66,7 +66,7 @@ class MSOLSpray:
                     }
 
             while 1:
-                url = f'{self.url}/common/oauth2/token'
+                url = f'{self.url}'
                 try:
                     if self.verbose:
                         log.debug(f'Requesting {url} through proxy: {proxy}')

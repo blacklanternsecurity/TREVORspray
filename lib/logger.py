@@ -50,7 +50,7 @@ class ColoredFormatter(logging.Formatter):
 
 ### LOG TO STDOUT AND FILE ###
 
-log_dir = Path(__file__).absolute().parent.parent / 'log'
+log_dir = Path.home() / '.trevorspray'
 log_file = log_dir / 'trevorspray.log'
 log_dir.mkdir(exist_ok=True)
 
