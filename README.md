@@ -1,18 +1,9 @@
-![trevor](https://user-images.githubusercontent.com/20261699/92336575-27071380-f070-11ea-8dd4-5ba42c7d04b7.jpeg)
-
-`#trevorforget`
-
 # TREVORspray
 TREVORspray is a featureful Microsoft 365 password sprayer based on [MSOLSpray](https://github.com/dafthack/MSOLSpray) 
 
 By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
 ![trevorspray](https://user-images.githubusercontent.com/20261699/92338226-e366d680-f07c-11ea-8664-7b320783dc98.png)
-
-CREDIT WHERE CREDIT IS DUE - MANY THANKS TO:
-- [@dafthack](https://twitter.com/dafthack) for writing [MSOLSpray](https://github.com/dafthack/MSOLSpray)
-- [@Mrtn9](https://twitter.com/Mrtn9) for his Python port of [MSOLSpray](https://github.com/MartinIngesen/MSOLSpray)
-- [@KnappySqwurl](https://twitter.com/KnappySqwurl) for being a splunk wizard and showing me how heckin loud I was being :)
 
 ## Features
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
@@ -31,19 +22,19 @@ $ cd trevorspray
 $ pip install -r requirements.txt
 ```
 
-## Example: Perform recon against a domain (retrieves tenant information, autodiscover info, mx records, etc.)
-```
-$ trevorspray.py --recon evilcorp.com
+## Example: Perform recon against a domain (retrieves tenant info, autodiscover, mx records, etc.)
+```bash
+trevorspray.py --recon evilcorp.com
 ```
 
 ## Example: Spray with 5-second delay between requests
-```
-$ trevorspray.py -e bob@evilcorp.com -p Fall2020! --delay 5
+```bash
+trevorspray.py -e bob@evilcorp.com -p Fall2020! --delay 5
 ```
 
 ## Example: Spray and round-robin between 3 IPs (the current IP is used as well.)
-```
-$ trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1
+```bash
+trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1
 ```
 
 ## TREVORspray - Help:
@@ -99,3 +90,12 @@ optional arguments:
   --base-port BASE_PORT
                         Base listening port to use for SOCKS proxies
 ```
+
+CREDIT WHERE CREDIT IS DUE - MANY THANKS TO:
+- [@dafthack](https://twitter.com/dafthack) for writing [MSOLSpray](https://github.com/dafthack/MSOLSpray)
+- [@Mrtn9](https://twitter.com/Mrtn9) for his Python port of [MSOLSpray](https://github.com/MartinIngesen/MSOLSpray)
+- [@KnappySqwurl](https://twitter.com/KnappySqwurl) for being a splunk wizard and showing me how heckin loud I was being :)
+
+![trevor](https://user-images.githubusercontent.com/20261699/92336575-27071380-f070-11ea-8dd4-5ba42c7d04b7.jpeg)
+
+`#trevorforget`
