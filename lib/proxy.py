@@ -1,7 +1,7 @@
 import os
+import sh
 import sys
 import logging
-from sh import ssh
 from . import logger
 from time import sleep
 import subprocess as sp
@@ -9,7 +9,6 @@ from pathlib import Path
 from .errors import TREVORSprayError
 
 log = logging.getLogger('trevorspray.proxy')
-
 
 
 class SSHProxyError(TREVORSprayError):
@@ -40,7 +39,7 @@ class SSHProxy:
 
         self._ssh_stdout = ''
         self._password_entered = False
-        self.sh = ssh(
+        self.sh = sh.ssh(
             self.host,
             _out=self._enter_password,
             _out_bufsize=0,
@@ -48,6 +47,7 @@ class SSHProxy:
             _unify_ttys=True,
             _long_sep=' ',
             _bg=True,
+            _bg_exc=False,
             **self.ssh_args
         )
         self.command = b' '.join(self.sh.cmd).decode()

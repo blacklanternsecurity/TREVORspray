@@ -22,6 +22,13 @@ $ cd trevorspray
 $ pip install -r requirements.txt
 ```
 
+## How To
+- First, get a list of emails for `corp.com` and perform a spray to see if the default configuration works. Usually it does.
+- If TREVORspray says the emails in your list don't exist, don't give up. Get the `token_endpoint` with `--recon corp.com`. The `token_endpoint` is the URL you'll be spraying against (with the `--url` option).
+- It may take some experimentation before you find the right combination of `token_endpoint` + email format.
+    - For example, if you're attacking `corp.com`, it may not be as easy as spraying `corp.com`. You may find that Corp's parent company Evilcorp owns their Azure tenant, meaning that you need to spray against `evilcorp.com`'s `token_endpoint`. Also, you may find that `corp.com`'s internal domain `corp.local` is used instead of `corp.com`.
+    - So in the end, instead of spraying `bob@corp.com` against `corp.com`'s `token_endpoint`, you're spraying `bob@corp.local` against `evilcorp.com`'s.
+
 ## Example: Perform recon against a domain (retrieves tenant info, autodiscover, mx records, etc.)
 ```bash
 trevorspray.py --recon evilcorp.com
@@ -40,7 +47,7 @@ trevorspray.py -e emails.txt -p Fall2021! --url https://login.windows.net/b439d7
 trevorspray.py -e bob@evilcorp.com -p Fall2021! --delay 5
 ```
 
-## Example: Spray and round-robin between 3 IPs (the current IP is used as well.)
+## Example: Spray and round-robin between 3 IPs (the current IP is also used, unless `-n` is specifiied)
 ```bash
 trevorspray.py -e emails.txt -p Fall2021! --ssh root@1.2.3.4 root@4.3.2.1
 ```
