@@ -34,6 +34,12 @@ def main(options):
                 consider += f' - {suggestion}\n'
             log.info(consider)
 
+    if options.delay and options.ssh:
+        num_ips = len(options.ssh) + (0 if options.no_current_ip else 1)
+        new_delay = options.delay / num_ips
+        log.debug(f'Adjusting delay for {num_ips:,} IPs: {options.delay:.2f}s --> {new_delay:.2f}s')
+        options.delay = new_delay
+
     if (options.passwords and options.emails):
 
         valid_emails_file = str(trevorspray_dir / 'valid_emails.txt')
