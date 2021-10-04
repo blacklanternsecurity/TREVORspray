@@ -25,7 +25,10 @@ class SSHProxy:
         self.key = key
         self.key_pass = key_pass
         self.ssh_args = dict(ssh_args)
+        # Enable SSH socks proxy
         self.ssh_args['D'] = str(port)
+        # Disable the "Are you sure you want to continue connecting" prompt
+        self.ssh_args['o'] = 'StrictHostKeychecking=no'
         self.sh = None
         self.command = ''
         self._ssh_stdout = ''
