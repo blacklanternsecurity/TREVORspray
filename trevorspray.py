@@ -4,6 +4,7 @@
 
 import sys
 import time
+import random
 import logging
 import argparse
 from lib import util
@@ -37,7 +38,7 @@ def main(options):
     if options.delay and options.ssh:
         num_ips = len(options.ssh) + (0 if options.no_current_ip else 1)
         new_delay = options.delay / num_ips
-        log.debug(f'Adjusting delay for {num_ips:,} IPs: {options.delay:.2f}s --> {new_delay:.2f}s')
+        log.debug(f'Adjusting delay for {num_ips:,} IPs: {options.delay:.2f}s --> {new_delay:.2f}s per IP')
         options.delay = new_delay
 
     if (options.passwords and options.emails):
@@ -78,9 +79,13 @@ def main(options):
 
                 for i,result in enumerate(sprayer.spray()):
                     print(f'       Sprayed {i+1:,} accounts\r', end='', flush=True)
-                    if options.verbose and options.delay > 0:
-                        log.debug(f'Sleeping for {options.delay:,} seconds')
-                    sleep(options.delay)
+                    if options.delay or options.jitter:
+                        delay = float(options.delay)
+                        jitter = random.random() * options.jitter
+                        delay += jitter
+                        if options.verbose and delay > 0:
+                            log.debug(f'Sleeping for {options.delay:,} seconds ({options.delay:.2f}s delay + {jitter:.2f}s jitter)')
+                        sleep(delay)
 
                 log.info(f'Finished spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
                 for success in sprayer.valid_logins:
@@ -109,6 +114,7 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--recon', metavar='DOMAIN', nargs='+', help='Retrieves info related to authentication, email, Azure, Microsoft 365, etc.')
     parser.add_argument('-f', '--force', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
+    parser.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
     parser.add_argument('-u', '--url', default='https://login.microsoft.com/common/oauth2/token', help='The URL to spray against (default is https://login.microsoft.com)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Show which proxy is being used for each request')
     parser.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
