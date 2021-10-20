@@ -118,7 +118,7 @@ if __name__ == '__main__':
     parser.add_argument('-u', '--url', default='https://login.microsoft.com/common/oauth2/token', help='The URL to spray against (default is https://login.microsoft.com)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Show which proxy is being used for each request')
     parser.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
-    parser.add_argument('-k', '--key', help='Use this SSH key when connecting to proxy hosts')
+    parser.add_argument('-i', '-k', '--key', help='Use this SSH key when connecting to proxy hosts')
     parser.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('-b', '--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
     parser.add_argument('-n', '--no-current-ip', action='store_true', help='Don\'t spray from the current IP, only use SSH proxies')
