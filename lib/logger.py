@@ -121,4 +121,4 @@ file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message
 
 root_logger = logging.getLogger('trevorspray')
 root_logger.handlers = [console_handler, file_handler]
-root_logger.setLevel(logging.DEBUG)
+root_logger.setLevel(logging.VERBOSE)

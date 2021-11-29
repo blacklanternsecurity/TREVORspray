@@ -35,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
     parser.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
     parser.add_argument('-u', '--url', default='https://login.microsoft.com/common/oauth2/token', help='The URL to spray against (default is https://login.microsoft.com)')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Show which proxy is being used for each request')
+    parser.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
     parser.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
     parser.add_argument('-i', '-k', '--key', help='Use this SSH key when connecting to proxy hosts')
     parser.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
@@ -46,12 +46,14 @@ if __name__ == '__main__':
 
         options = parser.parse_args()
 
+        if options.verbose:
+            logging.getLogger('trevorspray').setLevel(logging.DEBUG)
+
         if not (options.emails and options.passwords):
             if not options.recon:
                 log.error('Please specify --emails and --passwords')
         else:
             options.emails = util.files_to_list(options.emails)
-
 
         if options.no_current_ip and not options.ssh:
             log.error('Cannot specify --no-current-ip without giving --ssh hosts')
