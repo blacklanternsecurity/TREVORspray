@@ -34,31 +34,28 @@ def update_file(filename, l):
     Only unique entries are added
     '''
 
-    final_list = []
+    final_list = dict()
     try:
         with open(str(filename)) as f:
             for line in f:
-                entry = line.strip()
-                if not entry in final_list:
-                    final_list.append(entry)
+                final_list[line.strip()] = True
     except OSError:
         pass
     for entry in l:
-        if not entry in final_list:
-            final_list.append(entry)
+        final_list[entry] = True
     with open(filename, 'w') as f:
         f.writelines([f'{e}\n' for e in final_list])
 
 
-def read_file(filename):
+def read_file(filename, key=lambda x: x):
 
-    final_list = []
+    final_list = set()
     try:
         with open(str(filename)) as f:
             for e in f.readlines():
                 e = e.strip()
-                if e not in final_list:
-                    final_list.append(e)
+                if key(e):
+                    final_list.add(e)
     except OSError:
         pass
 

