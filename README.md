@@ -115,8 +115,10 @@ optional arguments:
 ```
 
 ## Writing Spray Modules
-Writing modules is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/example.py`), and specify the HTTP method and any other parameters
+Writing your own spray modules is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/example.py`), and fill out the HTTP method and any other parameters that you need in the requests. You can then use the module by specifying `-m example`
 ~~~python
+# Example spray module
+
 from .base import BaseSprayModule
 
 class SprayModule(BaseSprayModule):
@@ -135,7 +137,7 @@ class SprayModule(BaseSprayModule):
     fail_nonexistent = False
 
     headers = {
-        'User-Agent': 'Your Moms Vibrator',
+        'User-Agent': 'Your Moms Smart Vibrator',
     }
 
     def initialize(self):
@@ -143,7 +145,7 @@ class SprayModule(BaseSprayModule):
         Prep for 
         '''
         self.miscparams = {
-            'otherthing': input('What is the other thing?')
+            'otherthing': input("What's that other thing?")
         }
         return True
 
