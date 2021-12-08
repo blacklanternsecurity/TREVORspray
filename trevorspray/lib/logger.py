@@ -122,3 +122,7 @@ file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message
 root_logger = logging.getLogger('trevorspray')
 root_logger.handlers = [console_handler, file_handler]
 root_logger.setLevel(logging.VERBOSE)
+
+proxy_logger = logging.getLogger('trevorproxy')
+proxy_logger.handlers = [console_handler, file_handler]
+proxy_logger.setLevel(logging.VERBOSE)

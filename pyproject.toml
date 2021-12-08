@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "trevorspray"
+version = "1.0.0"
+description = "A featureful Microsoft 365 password sprayer"
+authors = ["TheTechromancer"]
+license = "GPL-3.0"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+Pygments = "^2.10.0"
+sh = "^1.14.2"
+PySocks = "^1.7.1"
+exchangelib = "^4.6.1"
+trevorproxy = "^1.0.1"
+
+[tool.poetry.scripts]
+trevorspray = 'trevorspray.cli:main'
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

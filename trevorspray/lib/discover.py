@@ -2,8 +2,6 @@ import re
 import json
 import logging
 import requests
-import wordninja
-import tldextract
 import dns.resolver
 from contextlib import suppress
 from .util import highlight_json
@@ -88,6 +86,9 @@ class DomainDiscovery:
 
 
     def suggest(self):
+
+        import wordninja
+        import tldextract
 
         domain_info = tldextract.extract(self.domain)
         domain = '.'.join([domain_info.subdomain, domain_info.domain])

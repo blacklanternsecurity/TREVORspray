@@ -1,9 +1,11 @@
-import requests
-from .base import SprayModule
 from contextlib import suppress
+from .base import BaseSprayModule
+from ..looters.msol import MSOLLooter
 
+class SprayModule(BaseSprayModule):
 
-class MSOLSpray(SprayModule):
+    # default target URL
+    default_url = 'https://login.microsoft.com/common/oauth2/token'
 
     body = {
         'resource': 'https://graph.windows.net',
@@ -18,6 +20,8 @@ class MSOLSpray(SprayModule):
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'Windows-AzureAD-Authentication-Provider/1.0',
     }
+
+    looter = MSOLLooter
 
     def check_response(self, response):
 
