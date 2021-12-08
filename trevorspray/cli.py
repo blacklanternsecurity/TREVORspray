@@ -44,6 +44,7 @@ def main():
     parser.add_argument('-r', '--recon', metavar='DOMAIN', nargs='+', help='Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.')
     parser.add_argument('-f', '--force', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
+    parser.add_argument('-ld', '--lockout-delay', type=float, default=30, help='Sleep for this many additional seconds when a lockout is encountered')
     parser.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
     parser.add_argument('--url', help='The URL to spray against')
     parser.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')

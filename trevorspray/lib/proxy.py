@@ -106,7 +106,7 @@ class ProxyThread(threading.Thread):
                         self.trevor.lockout_question = True
                         choice = 'X'
                         while (choice not in no and choice not in yes):
-                            choice = input('[Y/N] (default is N): ').lower()
+                            choice = input('[USER] [Y/N] (default is N): ').lower()
 
                         if choice in no:
                             log.info('Cancelling the password spray.')
@@ -114,6 +114,9 @@ class ProxyThread(threading.Thread):
                             break
 
                 print(f'       Sprayed {self.trevor.sprayed_counter:,} / {len(self.trevor.options.users):,} accounts\r', end='', flush=True)
+
+                if locked and self.options.lockout_delay:
+                    log.verbose(f'Lockout encountered, sleeping thread for {self.options.lockout_delay:,} seconds')
 
                 if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or self.trevor.sprayer.fail_nonexistent):
                     delay = float(self.options.delay)

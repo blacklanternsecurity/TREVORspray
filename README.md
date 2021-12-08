@@ -108,10 +108,10 @@ optional arguments:
                         Base listening port to use for SOCKS proxies
   -n, --no-current-ip   Don't spray from the current IP, only use SSH proxies
   -nl, --no-loot        Don't execute loot activites for valid accounts
-  -m {anyconnect,msol}, --module {anyconnect,msol}
-                        Spray module to use (default: msol)
   -t TIMEOUT, --timeout TIMEOUT
                         Connection timeout in seconds (default: 10)
+  -m {anyconnect,msol}, --module {anyconnect,msol}
+                        Spray module to use (default: msol)
 ```
 
 ## Writing Spray Modules
