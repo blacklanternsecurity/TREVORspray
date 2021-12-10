@@ -77,16 +77,15 @@ class ProxyThread(threading.Thread):
                 valid, exists, locked, msg = self.check_cred(user, password)
 
                 with self.trevor.lock:
-                    self.trevor.tried_logins.add(login_id)
+                    self.trevor.tried_logins[login_id] = True
 
                     if valid:
+                        exists = True
                         log.success(f'{user}:{password} - {msg}')
                         self.trevor.valid_logins.append(f'{user}:{password}')
-                        if not self.trevor.options.no_loot:
-                            self.trevor.sprayer.loot((user, password))
                     elif locked:
                         log.error(f'{user}:{password} - {msg}')
-                    elif exists is not False:
+                    elif exists:
                         log.warning(f'{user}:{password} - {msg}')
                     else:
                         log.info(f'{user}:{password} - {msg}')
@@ -96,6 +95,9 @@ class ProxyThread(threading.Thread):
 
                     if locked:
                         self.trevor.lockout_counter += 1
+
+                    if valid and not self.trevor.options.no_loot:
+                        self.trevor.sprayer.loot((user, password))
 
                     # If the force flag isn't set and lockout count is 10 we'll ask if the user is sure they want to keep spraying
                     if not self.trevor.options.force and self.trevor.lockout_counter == 10 and self.trevor.lockout_question == False:

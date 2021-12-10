@@ -7,6 +7,8 @@ import threading
 from . import util
 from pathlib import Path
 from .proxy import ProxyThread
+from .discover import DomainDiscovery
+from lib.sprayers.base import BaseSprayModule
 
 log = logging.getLogger('trevorspray.sprayer')
 
@@ -36,9 +38,15 @@ class TrevorSpray:
                 )
             )
 
-        spray_module = getattr(importlib.import_module(f'lib.sprayers.{options.module}'), 'SprayModule')
-
-        self.sprayer = spray_module(trevor=self)
+        spray_modules = importlib.import_module(f'lib.sprayers.{options.module}')
+        for m in spray_modules.__dict__.keys():
+            spray_module = getattr(spray_modules, m)
+            try:
+                if spray_module.__base__ == BaseSprayModule:
+                    self.sprayer = spray_module(trevor=self)
+                    break
+            except AttributeError:
+                continue
 
         self.existent_users_file = str(self.home / 'existent_users.txt')
         self.valid_logins_file = str(self.home / 'valid_logins.txt')

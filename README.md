@@ -115,7 +115,7 @@ optional arguments:
 ```
 
 ## Writing Spray Modules
-Writing your own spray modules is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/example.py`), and fill out the HTTP method and any other parameters that you need in the requests. You can then use the module by specifying `-m example`
+Writing your own spray modules is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/example.py`), and fill out the HTTP method and any other parameters that you need in the requests. You can then use the module by specifying `-m example`. You can call the class whatever you want, but it needs to inherit from `BaseSprayModule`.
 ~~~python
 # Example spray module
 

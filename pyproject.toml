@@ -12,6 +12,7 @@ sh = "^1.14.2"
 PySocks = "^1.7.1"
 exchangelib = "^4.6.1"
 trevorproxy = "^1.0.1"
+tldextract = "^3.1.2"
 
 [tool.poetry.scripts]
 trevorspray = 'trevorspray.cli:main'

@@ -18,7 +18,7 @@ class MSOLLooter(Looter):
 
     def test_imap(self, username, password):
 
-        log.info(f'Testing IMAP4 for {username}')
+        log.info(f'Testing IMAP4 MFA bypass for {username}')
         from imaplib import IMAP4, IMAP4_SSL
         success = False
 
@@ -31,7 +31,7 @@ class MSOLLooter(Looter):
             success = True
 
         except IMAP4.error as e:
-            log.warning(f'IMAP test failed for {username}: {e}')
+            log.warning(f'IMAP MFA bypass failed for {username}: {e}')
 
         except Exception as e:
             if log.level <= logging.DEBUG:
@@ -45,7 +45,7 @@ class MSOLLooter(Looter):
 
     def test_smtp(self, username, password):
 
-        log.info(f'Testing SMTP for {username}')
+        log.info(f'Testing SMTP MFA bypass for {username}')
         import smtplib
         success = False
 
@@ -62,7 +62,7 @@ class MSOLLooter(Looter):
                 break
 
             except smtplib.SMTPException as e:
-                log.warning(f'SMTP test failed for {username}: {e}')
+                log.warning(f'SMTP MFA bypass failed for {username}: {e}')
 
             except Exception as e:
                 if log.level <= logging.DEBUG:
@@ -75,7 +75,7 @@ class MSOLLooter(Looter):
 
     def test_pop(self, username, password):
 
-        log.info(f'Testing POP3 for {username}')
+        log.info(f'Testing POP3 MFA bypass for {username}')
         import poplib
         success = False
 
@@ -89,7 +89,7 @@ class MSOLLooter(Looter):
             success = True
 
         except poplib.error_proto as e:
-            log.warning(f'POP3 test failed for {username}: {e}')
+            log.warning(f'POP3 MFA bypass failed for {username}: {e}')
 
         except Exception as e:
             if log.level <= logging.DEBUG:
@@ -103,7 +103,7 @@ class MSOLLooter(Looter):
 
     def test_ews(self, username, password):
 
-        log.info(f'Testing EWS for {username} (https://outlook.office365.com/EWS/Exchange.asmx)')
+        log.info(f'Testing EWS MFA bypass for {username} (https://outlook.office365.com/EWS/Exchange.asmx)')
         import poplib
         import string
         import datetime

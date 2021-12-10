@@ -5,7 +5,7 @@ from .base import BaseSprayModule
 
 log = logging.getLogger('trevorspray.sprayers.anyconnect')
 
-class SprayModule(BaseSprayModule):
+class AnyConnect(BaseSprayModule):
 
     body_xml = '''<?xml version="1.0" encoding="UTF-8"?>
 <config-auth client="vpn" type="auth-reply">

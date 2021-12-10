@@ -70,7 +70,7 @@ def main():
                 log.error('Please specify --users and --passwords, or --recon')
                 sys.exit(2)
         else:
-            options.users = util.files_to_list(options.users)
+            options.users = list(util.files_to_list(options.users).keys())
 
         if options.no_current_ip and not options.ssh:
             log.error('Cannot specify --no-current-ip without giving --ssh hosts')

@@ -19,12 +19,13 @@ class DomainDiscovery:
 
     def __init__(self, domain):
 
-        self.domain = ''.join(str(domain).split())
+        self.domain = ''.join(str(domain).split()).strip('/')
 
 
     def recon(self):
 
         self.printjson(self.mxrecords())
+        self.printjson(self.txtrecords())
         self.printjson(self.openid_configuration())
         self.printjson(self.getuserrealm())
         self.printjson(self.autodiscover())
@@ -34,7 +35,7 @@ class DomainDiscovery:
     def printjson(j):
 
         if j:
-            log.critical(f'\n{highlight_json(json.dumps(j, indent=4))}')
+            log.success(f'\n{highlight_json(json.dumps(j, indent=4))}')
         else:
             log.warn('No results.')
 
@@ -71,6 +72,16 @@ class DomainDiscovery:
             for x in dns.resolver.query(self.domain, 'MX'):
                 mx_records.append(x.to_text())
         return mx_records
+
+
+    def txtrecords(self):
+        
+        log.info(f'Checking TXT records for {self.domain}')
+        txt_records = []
+        with suppress(Exception):
+            for x in dns.resolver.query(self.domain, 'TXT'):
+                txt_records.append(x.to_text())
+        return txt_records
 
 
     def autodiscover(self):
