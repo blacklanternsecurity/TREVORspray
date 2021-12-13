@@ -8,6 +8,8 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 ## Features
 - Supported modules:
   - `msol` (Office 365)
+  - `adfs` (Active Directory Federation Services)
+  - `okta` (Okta SSO)
   - `anyconnect` (Cisco VPN)
   - See below for how to create your own
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
@@ -51,7 +53,7 @@ trevorspray.py -u emails.txt -p 'Fall2021!' --url https://login.windows.net/b439
 trevorspray.py -u bob@evilcorp.com -p 'Fall2021!' --delay 5
 ```
 
-## Example: Spray and round-robin between 3 IPs (the current IP is also used, unless `-n` is specifiied)
+## Example: Spray and round-robin between 3 IPs (the current IP is also used, unless `-n` is specified)
 ```bash
 trevorspray.py -u emails.txt -p 'Fall2021!' --ssh root@1.2.3.4 root@4.3.2.1
 ```
@@ -114,7 +116,7 @@ optional arguments:
                         Spray module to use (default: msol)
 ```
 
-## Writing Spray Modules
+## Writing your own Spray Modules
 Writing your own spray modules is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/example.py`), and fill out the HTTP method and any other parameters that you need in the requests. You can then use the module by specifying `-m example`. You can call the class whatever you want, but it needs to inherit from `BaseSprayModule`.
 ~~~python
 # Example spray module
@@ -142,12 +144,15 @@ class SprayModule(BaseSprayModule):
 
     def initialize(self):
         '''
-        Prep for 
+        Get additional arguments from user at runtime
         '''
-        self.miscparams = {
-            'otherthing': input("What's that other thing?")
-        }
+        while not self.runtimeparams.get('otherthing', ''):
+            self.runtimeparams.update({
+                'otherthing': input("What's that other thing?")
+            })
+
         return True
+
 
     def check_response(self, response):
         '''
