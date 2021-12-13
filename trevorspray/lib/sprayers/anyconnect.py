@@ -71,7 +71,7 @@ class AnyConnect(BaseSprayModule):
         if initial_response.status_code == 200:
             self.auth_type = 'xml'
             log.info('Detected XML auth')
-            self.body = self.body_xml
+            self.request_data = self.body_xml
             self.headers = self.headers_xml
             try:
                 parsed_initial_response = etree.fromstring(initial_response.content)
@@ -91,7 +91,7 @@ class AnyConnect(BaseSprayModule):
         # plain auth
         elif initial_response.status_code in (301, 302):
             self.auth_type = 'plain'
-            self.body = self.body_plain
+            self.request_data = self.body_plain
             self.headers = self.headers_plain
             host = '/'.join(initial_response.url.split('/', 3)[:3])
             self.url = host + initial_response.headers['Location']
@@ -134,7 +134,13 @@ class AnyConnect(BaseSprayModule):
                 selected_tunnelgroup = tunnelgroup
                 log.info(f'Found tunnel group "{alias}"')
         else:
+
             while selected_tunnelgroup is None:
+                try:
+                    tunnelgroup = tunnelgroups[self.globalparams.get('group', None)]
+                    selected_tunnelgroup = tunnelgroup
+                except KeyError:
+                    pass
                 try:
                     tunnelgroup = tunnelgroups[input(f'[USER] Select group: [{"|".join(tunnelgroups.keys())}]: ')]
                     selected_tunnelgroup = tunnelgroup
@@ -145,7 +151,7 @@ class AnyConnect(BaseSprayModule):
                     log.debug(f'    {k}: {v}')
 
         log.info(f'Using tunnel group "{selected_tunnelgroup["groupname"]}"')
-        self.miscparams.update(selected_tunnelgroup)
+        self.globalparams.update(selected_tunnelgroup)
 
         return True
 

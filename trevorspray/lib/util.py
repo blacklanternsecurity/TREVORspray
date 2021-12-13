@@ -1,3 +1,4 @@
+import json
 import logging
 import tldextract
 import subprocess as sp
@@ -9,7 +10,14 @@ from pygments.formatters import TerminalFormatter
 
 log = logging.getLogger('trevorspray.util')
 
+
+windows_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36 Edg/96.0.1054.43'
+
+
 def highlight_json(j):
+
+    if type(j) == dict:
+        j = json.dumps(j, indent=4)
 
     return highlight(j, JsonLexer(), TerminalFormatter())
 

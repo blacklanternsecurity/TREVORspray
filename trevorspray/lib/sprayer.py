@@ -1,5 +1,4 @@
 import time
-import random
 import logging
 import requests
 import importlib
@@ -28,7 +27,11 @@ class TrevorSpray:
         self.home.mkdir(exist_ok=True)
 
         self.proxies = []
-        for i,ssh_host in enumerate(options.ssh + ([] if options.no_current_ip else [None])):
+        if options.ssh:
+            threads = options.ssh + ([] if options.no_current_ip else [None])
+        else:
+            threads = [None] * options.threads
+        for i,ssh_host in enumerate(threads):
             self.proxies.append(
                 ProxyThread(
                     trevor=self,

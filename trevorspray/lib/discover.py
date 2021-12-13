@@ -35,7 +35,7 @@ class DomainDiscovery:
     def printjson(j):
 
         if j:
-            log.success(f'\n{highlight_json(json.dumps(j, indent=4))}')
+            log.success(f'\n{highlight_json(j)}')
         else:
             log.warn('No results.')
 

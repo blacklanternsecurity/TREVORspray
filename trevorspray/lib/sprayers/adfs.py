@@ -11,7 +11,7 @@ class ADFS(BaseSprayModule):
     userparm = 'UserName'
     passparam = 'Password'
 
-    body = {
+    request_data = {
         'Kmsi': 'true',
         'AuthMethod': 'FormsAuthentication'
     }

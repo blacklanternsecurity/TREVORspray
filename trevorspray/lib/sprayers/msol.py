@@ -1,13 +1,14 @@
 from contextlib import suppress
 from .base import BaseSprayModule
 from ..looters.msol import MSOLLooter
+from ..discover import DomainDiscovery
 
 class MSOL(BaseSprayModule):
 
     # default target URL
     default_url = 'https://login.microsoft.com/common/oauth2/token'
 
-    body = {
+    request_data = {
         'resource': 'https://graph.windows.net',
         'client_id': '38aa3b87-a06d-4817-b275-7a316988d93b',
         'client_info': '1',
@@ -30,6 +31,8 @@ class MSOL(BaseSprayModule):
         namespace = userrealm.get('NameSpaceType', 'Unknown')
         if namespace == 'Federated':
             log.warning(f'NameSpaceType for {self.url} is "{namespace}", not "Managed". You may want to try the "adfs" module instead.')
+
+        return True
 
     def check_response(self, response):
 

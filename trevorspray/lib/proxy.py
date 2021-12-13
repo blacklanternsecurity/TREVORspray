@@ -1,3 +1,4 @@
+import random
 import logging
 import requests
 import threading
@@ -121,12 +122,17 @@ class ProxyThread(threading.Thread):
                     log.verbose(f'Lockout encountered, sleeping thread for {self.options.lockout_delay:,} seconds')
 
                 if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or self.trevor.sprayer.fail_nonexistent):
-                    delay = float(self.options.delay)
-                    jitter = random.random() * self.options.jitter
+                    delay = float(self.trevor.options.delay)
+                    jitter = random.random() * self.trevor.options.jitter
                     delay += jitter
                     if delay > 0:
-                        log.debug(f'Sleeping thread for {self.options.delay:,} seconds ({self.options.delay:.2f}s delay + {jitter:.2f}s jitter)')
-                    sleep(delay)
+                        if self.trevor.options.ssh:
+                            log.debug(f'Sleeping thread for {delay:.1f} seconds ({self.trevor.options.delay:.1f}s delay + {jitter:.1f}s jitter)')
+                            sleep(delay)
+                        else:
+                            log.debug(f'Sleeping for {delay:.1f} seconds ({self.trevor.options.delay:.1f}s delay + {jitter:.1f}s jitter)')
+                            with self.trevor.lock:
+                                sleep(delay)
 
                 self._running = False
 

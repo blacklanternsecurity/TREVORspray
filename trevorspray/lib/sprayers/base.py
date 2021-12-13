@@ -1,4 +1,6 @@
+import os
 import requests
+from ..util import windows_user_agent
 from ..errors import TREVORSprayError
 
 class BaseSprayModule:
@@ -11,10 +13,11 @@ class BaseSprayModule:
     userparam = 'username'
     # name of password parameter
     passparam = 'password'
-    # other parameters
-    miscparams = {}
+    # other global parameters
+    globalparams = {}
     # body of request
-    body = {}
+    request_data = None
+    request_json = None
     # HTTP headers
     headers = {}
     # HTTP cookies
@@ -34,6 +37,19 @@ class BaseSprayModule:
         else:
             raise TREVORSprayError('Please specify a --url to spray against')
 
+        # enumerate environment variables
+        self.runtimeparams = {}
+        keyword = 'trevorspray_'
+        for k,v in os.environ.items():
+            if k.startswith(keyword):
+                _k = k.split(keyword)[-1]
+                self.runtimeparams[_k] = v
+
+        # make sure we have a user-agent
+        if not self.headers.get('User-Agent', ''):
+            self.headers['User-Agent'] = windows_user_agent
+
+
     def initialize(self):
         return True
 
@@ -43,25 +59,43 @@ class BaseSprayModule:
         Returns request.Request() object
         '''
 
-        if type(self.body) == dict:
-            data = dict(self.body)
+        runtimeparams = {
+            'username': username,
+            'password': password
+        }
+
+        url = self.url.format(**self.globalparams, **self.runtimeparams)
+
+        data = None
+        if type(self.request_data) == dict:
+            data = dict(self.request_data)
             data.update({
                 self.userparam: username,
                 self.passparam: password
             })
-            data.update(self.miscparams)
-        else:
-            data = str(self.body.format(
+            data.update(self.globalparams)
+        elif type(self.request_data) == str:
+            data = self.request_data.format(
                 username=username,
                 password=password,
-                **self.miscparams
-            ))
+                **self.globalparams
+            )
+
+        json = None
+        if type(self.request_json) == dict:
+            json = dict(self.request_json)
+            json.update({
+                self.userparam: username,
+                self.passparam: password
+            })
+
         return requests.Request(
             method=self.method,
-            url=self.url,
+            url=url,
             headers=self.headers,
             cookies=self.cookies,
-            data=data
+            data=data,
+            json=json
         )
 
 
