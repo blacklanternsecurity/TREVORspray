@@ -1,10 +1,14 @@
 import json
 import logging
+import requests
 import tldextract
 import subprocess as sp
 from pathlib import Path
+import lxml.etree as etree
 from pygments import highlight
+from contextlib import suppress
 from urllib.parse import urlparse
+from pygments.lexers.html import XmlLexer
 from pygments.lexers.data import JsonLexer
 from pygments.formatters import TerminalFormatter
 
@@ -20,6 +24,17 @@ def highlight_json(j):
         j = json.dumps(j, indent=4)
 
     return highlight(j, JsonLexer(), TerminalFormatter())
+
+
+def highlight_xml(x):
+
+    if type(x) == str:
+        x = str.encode()
+
+    with suppress(Exception):
+        x = etree.tostring(etree.fromstring(x), pretty_print=True)
+
+    return highlight(x, XmlLexer(), TerminalFormatter())
 
 
 def files_to_list(l):
@@ -109,3 +124,12 @@ def is_url(d):
     if parsed.scheme or '/' in parsed.path or parsed.query:
         return True
     return False
+
+
+def download_file(url, filename, **kwargs):
+
+    with requests.get(url, stream=True, **kwargs) as response:
+        response.raise_for_status()
+        with open(filename, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):  
+                f.write(chunk)

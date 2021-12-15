@@ -1,7 +1,10 @@
+import logging
 from contextlib import suppress
 from .base import BaseSprayModule
 from ..looters.msol import MSOLLooter
 from ..discover import DomainDiscovery
+
+log = logging.getLogger('trevorspray.sprayers.msol')
 
 class MSOL(BaseSprayModule):
 
@@ -52,6 +55,8 @@ class MSOL(BaseSprayModule):
                 exists = True
 
             error = r.get('error_description', '')
+            if error:
+                log.debug(error)
 
             if 'AADSTS50126' in error:
                 msg = f'AADSTS50126: Invalid email or password. Account could exist.'
@@ -105,6 +110,7 @@ class MSOL(BaseSprayModule):
                 msg = f'AADSTS50057: The account appears to be disabled.'
 
             else:
+                valid = None
                 msg = f'Got an error we haven\'t seen yet: {error}'
 
         return (valid, exists, locked, msg)

