@@ -51,6 +51,7 @@ def main():
     parser.add_argument('-nl', '--no-loot', action='store_true', help='Don\'t execute loot activites for valid accounts')
     parser.add_argument('--timeout', type=float, default=10, help='Connection timeout in seconds (default: 10)')
     parser.add_argument('-m', '--module', choices=module_choices, default='msol', help='Spray module to use (default: msol)')
+    parser.add_argument('-6', '--prefer-ipv6', action='store_true', help='Prefer IPv6 over IPv4')
     parser.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
 
     ssh_parser = parser.add_argument_group(title='SSH Proxy', description='Round-robin request through remote systems via SSH (overrides --threads)')
@@ -63,6 +64,21 @@ def main():
     try:
 
         options = parser.parse_args()
+
+        # Monkey patch to prioritize IPv4 or IPv6
+        import socket
+        old_getaddrinfo = socket.getaddrinfo
+        if options.prefer_ipv6:
+            def new_getaddrinfo(*args, **kwargs):
+                addrs = old_getaddrinfo(*args, **kwargs)
+                addrs.sort(key=lambda x: x[0], reverse=True)
+                return addrs
+        else:
+            def new_getaddrinfo(*args, **kwargs):
+                addrs = old_getaddrinfo(*args, **kwargs)
+                addrs.sort(key=lambda x: x[0])
+                return addrs
+        socket.getaddrinfo = new_getaddrinfo
 
         if options.verbose:
             trevorproxy_logger = logging.getLogger('trevorproxy')

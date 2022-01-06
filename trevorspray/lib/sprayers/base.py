@@ -9,6 +9,8 @@ class BaseSprayModule:
     method = 'POST'
     # default target URL
     default_url = None
+    # alternative IPv6 URL
+    ipv6_url = None
     # name of username parameter
     userparam = 'username'
     # name of password parameter
@@ -36,6 +38,9 @@ class BaseSprayModule:
             self.url = str(self.default_url)
         else:
             raise TREVORSprayError('Please specify a --url to spray against')
+
+        if self.ipv6_url and self.url == self.default_url and self.trevor.options.prefer_ipv6:
+            self.url = self.ipv6_url
 
         # enumerate environment variables
         self.runtimeparams = {}
@@ -65,6 +70,8 @@ class BaseSprayModule:
         }
 
         url = self.url.format(**self.globalparams, **self.runtimeparams)
+        if not url.lower().startswith('http'):
+            url = f'https://{url}'
 
         data = None
         if type(self.request_data) == dict:

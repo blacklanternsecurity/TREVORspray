@@ -45,7 +45,7 @@ class TrevorSpray:
         for m in spray_modules.__dict__.keys():
             spray_module = getattr(spray_modules, m)
             try:
-                if spray_module.__base__ == BaseSprayModule:
+                if BaseSprayModule in spray_module.__bases__:
                     self.sprayer = spray_module(trevor=self)
                     break
             except AttributeError:

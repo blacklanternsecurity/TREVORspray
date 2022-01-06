@@ -327,7 +327,7 @@ class MSOLLooter(Looter):
         }
 
         try:
-            response = requests.get(
+            response = requests.post(
                 'https://login.microsoftonline.com/common/oauth2/token',
                 headers=headers,
                 data=request_data,

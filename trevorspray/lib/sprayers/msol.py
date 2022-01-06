@@ -10,6 +10,7 @@ class MSOL(BaseSprayModule):
 
     # default target URL
     default_url = 'https://login.microsoft.com/common/oauth2/token'
+    ipv6_url = 'https://prdv6a.aadg.msidentity.com/common/oauth2/token'
 
     request_data = {
         'resource': 'https://graph.windows.net',
@@ -28,6 +29,9 @@ class MSOL(BaseSprayModule):
     looter = MSOLLooter
 
     def initialize(self):
+
+        if self.trevor.options.prefer_ipv6 and self.url == self.ipv6_url:
+            self.headers['Host'] = 'login.microsoft.com'
 
         discovery = DomainDiscovery(self.url)
         userrealm = discovery.getuserrealm()
