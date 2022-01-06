@@ -6,7 +6,7 @@ authors = ["TheTechromancer"]
 license = "GPL-3.0"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 Pygments = "^2.10.0"
 sh = "^1.14.2"
 PySocks = "^1.7.1"
