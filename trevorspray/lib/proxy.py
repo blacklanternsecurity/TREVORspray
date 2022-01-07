@@ -115,6 +115,8 @@ class ProxyThread(threading.Thread):
                         if choice in no:
                             log.info('Cancelling the password spray.')
                             log.info('NOTE: If you are seeing multiple "account is locked" messages after your first 10 attempts or so this may indicate Azure AD Smart Lockout is enabled.')
+                            self.trevor._stop = True
+                            self.trevor._running = True
                             break
 
                 print(f'       Sprayed {self.trevor.sprayed_counter:,} / {len(self.trevor.options.users):,} accounts\r', end='', flush=True)
@@ -123,7 +125,7 @@ class ProxyThread(threading.Thread):
                     log.verbose(f'Lockout encountered, sleeping thread for {self.trevor.options.lockout_delay:.1f} seconds')
                     sleep(self.trevor.options.lockout_delay)
 
-                if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or self.trevor.sprayer.fail_nonexistent):
+                if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or locked or self.trevor.sprayer.fail_nonexistent):
                     delay = float(self.trevor.options.delay)
                     jitter = random.random() * self.trevor.options.jitter
                     delay += jitter
@@ -185,6 +187,11 @@ class ProxyThread(threading.Thread):
                     'allow_redirects': False,
                     'verify': False
                 }
+                if self.trevor.options.proxy:
+                    kwargs['proxies'] = {
+                        'http': self.trevor.options.proxy,
+                        'https': self.trevor.options.proxy
+                    }
                 if self.proxy is not None:
                     kwargs['proxies'] = self.proxy_arg
                 response = session.send(

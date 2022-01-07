@@ -107,7 +107,7 @@ class MSOL(BaseSprayModule):
 
             elif 'AADSTS50053' in error:
                 locked = True
-                exists = False # M$ gets nasty and sometimes lies about this
+                exists = None # M$ gets nasty and sometimes lies about this
                 # Locked out account or Smart Lockout in place
                 msg = f'AADSTS50053: Account appears to be locked.'
 
