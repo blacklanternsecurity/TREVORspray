@@ -50,8 +50,10 @@ def main():
     parser.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
     parser.add_argument('-nl', '--no-loot', action='store_true', help='Don\'t execute loot activites for valid accounts')
     parser.add_argument('--timeout', type=float, default=10, help='Connection timeout in seconds (default: 10)')
+    parser.add_argument('--random-useragent', action='store_true', help='Add a random value to the User-Agent for each request')
     parser.add_argument('-m', '--module', choices=module_choices, default='msol', help='Spray module to use (default: msol)')
     parser.add_argument('-6', '--prefer-ipv6', action='store_true', help='Prefer IPv6 over IPv4')
+    parser.add_argument('--proxy', help='Proxy to use for HTTP and HTTPS requests')
     parser.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
 
     ssh_parser = parser.add_argument_group(title='SSH Proxy', description='Round-robin request through remote systems via SSH (overrides --threads)')
@@ -64,6 +66,10 @@ def main():
     try:
 
         options = parser.parse_args()
+
+        if options.proxy and options.ssh:
+            log.error('Cannot specify --proxy with --ssh because the SSH hosts are already used as proxies')
+            sys.exit(1)
 
         # Monkey patch to prioritize IPv4 or IPv6
         import socket
@@ -79,6 +85,10 @@ def main():
                 addrs.sort(key=lambda x: x[0])
                 return addrs
         socket.getaddrinfo = new_getaddrinfo
+
+        if options.proxy:
+            os.environ['HTTP_PROXY'] = options.proxy
+            os.environ['HTTPS_PROXY'] = options.proxy
 
         if options.verbose:
             trevorproxy_logger = logging.getLogger('trevorproxy')

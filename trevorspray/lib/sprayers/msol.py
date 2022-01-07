@@ -1,3 +1,4 @@
+import uuid
 import logging
 from contextlib import suppress
 from .base import BaseSprayModule
@@ -40,6 +41,13 @@ class MSOL(BaseSprayModule):
             log.warning(f'NameSpaceType for {self.url} is "{namespace}", not "Managed". You may want to try the "adfs" module instead.')
 
         return True
+
+    def create_request(self, *args, **kwargs):
+
+        request = super().create_request(*args, **kwargs)
+        if self.trevor.options.random_useragent:
+            request.data['client_id'] = str(uuid.uuid4())
+        return request
 
     def check_response(self, response):
 
@@ -115,6 +123,6 @@ class MSOL(BaseSprayModule):
 
             else:
                 valid = None
-                msg = f'Got an error we haven\'t seen yet: {error}'
+                msg = f'HTTP {response.status_code}: Got an error we haven\'t seen yet: {(r if r else response.text)}'
 
         return (valid, exists, locked, msg)

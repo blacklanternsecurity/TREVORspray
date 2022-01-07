@@ -3,6 +3,7 @@ import logging
 import requests
 import threading
 from time import sleep
+from .util import windows_user_agent
 from trevorproxy.lib.ssh import SSHProxy
 from trevorproxy.lib.errors import SSHProxyError
 
@@ -118,8 +119,9 @@ class ProxyThread(threading.Thread):
 
                 print(f'       Sprayed {self.trevor.sprayed_counter:,} / {len(self.trevor.options.users):,} accounts\r', end='', flush=True)
 
-                if locked and self.options.lockout_delay:
-                    log.verbose(f'Lockout encountered, sleeping thread for {self.options.lockout_delay:,} seconds')
+                if locked and self.trevor.options.lockout_delay:
+                    log.verbose(f'Lockout encountered, sleeping thread for {self.trevor.options.lockout_delay:.1f} seconds')
+                    sleep(self.trevor.options.lockout_delay)
 
                 if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or self.trevor.sprayer.fail_nonexistent):
                     delay = float(self.trevor.options.delay)
@@ -171,6 +173,11 @@ class ProxyThread(threading.Thread):
                     self.trevor._stop = True
                     self._running = False
                     break
+
+                # randomize user-agent if requested
+                if self.trevor.options.random_useragent:
+                    current_useragent = request.headers.get('User-Agent', windows_user_agent)
+                    request.headers['User-Agent'] = f'{current_useragent} {random.randint(0,99999)}.{random.randint(0,99999)}'
 
                 log.debug(f'Requesting {request.method} {request.url} through proxy: {self.proxy}')
                 kwargs = {
