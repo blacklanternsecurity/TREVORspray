@@ -5,6 +5,7 @@ import importlib
 import threading
 from . import util
 from pathlib import Path
+from shutil import which
 from .proxy import ProxyThread
 from .discover import DomainDiscovery
 from lib.sprayers.base import BaseSprayModule
@@ -30,8 +31,11 @@ class TrevorSpray:
         self.proxies = []
         if options.ssh:
             threads = options.ssh + ([] if options.no_current_ip else [None])
+        elif options.subnet:
+            threads = ['<subnet>'] * options.threads
         else:
             threads = [None] * options.threads
+
         for i,ssh_host in enumerate(threads):
             self.proxies.append(
                 ProxyThread(
@@ -136,6 +140,9 @@ class TrevorSpray:
 
         log.debug('Stopping sprayer')
         self._stop = True
+        for proxy in self.proxies:
+            if proxy is not None:
+                proxy.stop()
         # write valid users
         util.update_file(self.existent_users_file, self.existent_users)
         log.info(f'{len(self.existent_users):,} valid users written to {self.existent_users_file}')

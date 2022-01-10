@@ -3,11 +3,44 @@ import logging
 import requests
 import threading
 from time import sleep
+from contextlib import suppress
 from .util import windows_user_agent
 from trevorproxy.lib.ssh import SSHProxy
 from trevorproxy.lib.errors import SSHProxyError
 
 log = logging.getLogger('trevorspray.proxy')
+
+
+class SubnetThread(threading.Thread):
+
+    def __init__(self, *args, **kwargs):
+
+        self.listen_address = '127.0.0.1'
+        self.listen_port = 10080
+        self.trevor = kwargs.pop('trevor', None)
+
+        super().__init__(*args, **kwargs)
+
+    def run(self):
+
+        from trevorproxy.lib.subnet import SubnetProxy
+        from trevorproxy.lib.socks import ThreadingTCPServer, SocksProxy
+
+        subnet_proxy = SubnetProxy(
+            interface=self.trevor.options.interface,
+            subnet=self.trevor.options.subnet
+        )
+        try:
+            subnet_proxy.start()
+            with ThreadingTCPServer(
+                    (self.listen_address, self.listen_port),
+                    SocksProxy,
+                    proxy=subnet_proxy,
+                ) as server:
+                log.info(f'Listening on socks5://{self.listen_address}:{self.listen_port}')
+                server.serve_forever()
+        finally:
+            subnet_proxy.stop()
 
 
 class ProxyThread(threading.Thread):
@@ -17,10 +50,24 @@ class ProxyThread(threading.Thread):
         self.trevor = kwargs.pop('trevor', None)
         host = kwargs.pop('host', None)
         proxy_port = kwargs.pop('proxy_port', None)
+        self.subnet_proxy = None
 
-        if host is None:
-            self.proxy = None
-            self.proxy_arg = None
+        self.proxy = None
+        self.proxy_arg = None
+
+        if host == '<subnet>':
+            self.subnet_proxy = SubnetThread(
+                None,
+                trevor=self.trevor,
+                daemon=True
+            )
+            self.proxy = str(self.trevor.options.subnet)
+            self.proxy_arg = {
+                'http': f'socks5://{self.subnet_proxy.listen_address}:{self.subnet_proxy.listen_port}',
+                'https': f'socks5://{self.subnet_proxy.listen_address}:{self.subnet_proxy.listen_port}',
+            }
+            self.subnet_proxy.start()
+
         else:
             self.proxy = SSHProxy(
                 host=host,
@@ -38,6 +85,12 @@ class ProxyThread(threading.Thread):
         self._running = False
         self.lock = threading.Lock()
         self.q = None
+
+
+    def stop(self):
+
+        with suppress(Exception):
+            self.proxy.stop()
 
 
     def submit(self, user, password):
@@ -211,7 +264,7 @@ class ProxyThread(threading.Thread):
                 log.error(f'Error in request: {e}')
                 log.error('Retrying...')
                 # rebuild proxy
-                if self.proxy_arg:
+                if self.proxy_arg and not type(self.proxy) == str:
                     try:
                         self.proxy.start()
                     except SSHProxyError as e:

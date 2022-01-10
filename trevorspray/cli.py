@@ -63,9 +63,18 @@ def main():
     ssh_parser.add_argument('-b', '--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
     ssh_parser.add_argument('-n', '--no-current-ip', action='store_true', help='Don\'t spray from the current IP, only use SSH proxies')
 
+    subnet_parser = parser.add_argument_group(title='Subnet Proxy', description='Round-robin traffic from IP subnet')
+    subnet_parser.add_argument('--interface', help='Interface to send packets on')
+    subnet_parser.add_argument('--subnet', required=True, help='Subnet to send packets from')
+
     try:
 
         options = parser.parse_args()
+
+        conflicting_options = [options.subnet, options.ssh, options.proxy]
+        if conflicting_options.count(None) + conflicting_options.count([]) < 2:
+            log.error('Cannot specify --ssh, --subnet, or --proxy together')
+            sys.exit(1)
 
         if options.proxy and options.ssh:
             log.error('Cannot specify --proxy with --ssh because the SSH hosts are already used as proxies')
@@ -110,6 +119,13 @@ def main():
 
         if options.ssh and util.ssh_key_encrypted(options.key):
             options.key_pass = getpass('SSH key password (press enter if none): ')
+
+        if options.subnet:
+            # make sure executables exist
+            for binary in ['iptables']:
+                if not which(binary):
+                    log.error(f'Please install {binary}')
+                    sys.exit(1)
 
         log.info(f'Command: {" ".join(sys.argv)}')
         sprayer = TrevorSpray(options)
