@@ -23,7 +23,7 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
 ## Installation:
 ```
-$ pip install git+https://github.com/blacklanternsecurity/trevorspray
+$ pip install -U git+https://github.com/blacklanternsecurity/trevorspray
 ```
 
 ## How To - O365
