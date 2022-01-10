@@ -22,6 +22,7 @@ class TrevorSpray:
         self.lockout_question = False
 
         self.sprayed_counter = 0
+        self.sprayed_possible = len(self.options.users) * len(self.options.passwords)
 
         self.home = Path.home() / '.trevorspray'
         self.home.mkdir(exist_ok=True)
@@ -82,7 +83,7 @@ class TrevorSpray:
                     '''
 
             if (self.options.passwords and self.options.users):
-                log.info(f'Spraying {len(self.options.users):,} users against {self.options.url} at {time.ctime()}')
+                log.info(f'Spraying {len(self.options.users):,} users * {len(self.options.passwords):,} passwords against {self.options.url} at {time.ctime()}')
                 self.spray()
 
                 log.info(f'Finished spraying {len(self.options.users):,} users against {self.options.url} at {time.ctime()}')
@@ -111,7 +112,7 @@ class TrevorSpray:
         for password in self.options.passwords:
             for user in self.options.users:
                 accepted = False
-                while not accepted:
+                while not accepted and not self._stop:
                     for proxy in self.proxies:
                         accepted = proxy.submit(user, password)
                         if accepted:
