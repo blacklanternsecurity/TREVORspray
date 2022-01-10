@@ -56,16 +56,16 @@ def main():
     parser.add_argument('--proxy', help='Proxy to use for HTTP and HTTPS requests')
     parser.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
 
-    ssh_parser = parser.add_argument_group(title='SSH Proxy', description='Round-robin request through remote systems via SSH (overrides --threads)')
+    ssh_parser = parser.add_argument_group(title='SSH Proxy', description='Round-robin traffic through remote systems via SSH (overrides --threads)')
     ssh_parser.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
     ssh_parser.add_argument('-i', '-k', '--key', help='Use this SSH key when connecting to proxy hosts')
     ssh_parser.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
     ssh_parser.add_argument('-b', '--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
     ssh_parser.add_argument('-n', '--no-current-ip', action='store_true', help='Don\'t spray from the current IP, only use SSH proxies')
 
-    subnet_parser = parser.add_argument_group(title='Subnet Proxy', description='Round-robin traffic from IP subnet')
+    subnet_parser = parser.add_argument_group(title='Subnet Proxy', description='Send traffic from random addresses within IP subnet')
     subnet_parser.add_argument('--interface', help='Interface to send packets on')
-    subnet_parser.add_argument('--subnet', required=True, help='Subnet to send packets from')
+    subnet_parser.add_argument('--subnet', help='Subnet to send packets from')
 
     try:
 

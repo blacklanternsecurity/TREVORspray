@@ -16,7 +16,6 @@ class SubnetThread(threading.Thread):
     def __init__(self, *args, **kwargs):
 
         self.listen_address = '127.0.0.1'
-        self.listen_port = 10080
         self.trevor = kwargs.pop('trevor', None)
 
         super().__init__(*args, **kwargs)
@@ -33,11 +32,11 @@ class SubnetThread(threading.Thread):
         try:
             subnet_proxy.start()
             with ThreadingTCPServer(
-                    (self.listen_address, self.listen_port),
+                    (self.listen_address, self.trevor.options.base_port),
                     SocksProxy,
                     proxy=subnet_proxy,
                 ) as server:
-                log.info(f'Listening on socks5://{self.listen_address}:{self.listen_port}')
+                log.info(f'Listening on socks5://{self.listen_address}:{self.trevor.options.base_port}')
                 server.serve_forever()
         finally:
             subnet_proxy.stop()
@@ -50,25 +49,18 @@ class ProxyThread(threading.Thread):
         self.trevor = kwargs.pop('trevor', None)
         host = kwargs.pop('host', None)
         proxy_port = kwargs.pop('proxy_port', None)
-        self.subnet_proxy = None
 
         self.proxy = None
         self.proxy_arg = None
 
         if host == '<subnet>':
-            self.subnet_proxy = SubnetThread(
-                None,
-                trevor=self.trevor,
-                daemon=True
-            )
             self.proxy = str(self.trevor.options.subnet)
             self.proxy_arg = {
-                'http': f'socks5://{self.subnet_proxy.listen_address}:{self.subnet_proxy.listen_port}',
-                'https': f'socks5://{self.subnet_proxy.listen_address}:{self.subnet_proxy.listen_port}',
+                'http': f'socks5://{self.trevor.subnet_proxy.listen_address}:{self.trevor.options.base_port}',
+                'https': f'socks5://{self.trevor.subnet_proxy.listen_address}:{self.trevor.options.base_port}',
             }
-            self.subnet_proxy.start()
 
-        else:
+        elif host is not None:
             self.proxy = SSHProxy(
                 host=host,
                 key=self.trevor.options.key,

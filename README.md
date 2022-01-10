@@ -81,6 +81,7 @@ trevorspray.py -e f.last.txt -p 'Fall2021!'
 $ ./trevorspray.py --help
 usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-t THREADS] [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-ld LOCKOUT_DELAY] [-j JITTER] [-nl]
                    [--timeout TIMEOUT] [--random-useragent] [-m {okta,anyconnect,adfs,msol}] [-6] [--proxy PROXY] [-v] [-s USER@SERVER [USER@SERVER ...]] [-i KEY] [-b BASE_PORT] [-n]
+                   [--interface INTERFACE] [--subnet SUBNET]
 
 A password sprayer with the option to load-balance traffic through SSH hosts
 
@@ -113,7 +114,7 @@ optional arguments:
                         Show which proxy is being used for each request
 
 SSH Proxy:
-  Round-robin request through remote systems via SSH (overrides --threads)
+  Round-robin traffic through remote systems via SSH (overrides --threads)
 
   -s USER@SERVER [USER@SERVER ...], --ssh USER@SERVER [USER@SERVER ...]
                         Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
@@ -122,6 +123,13 @@ SSH Proxy:
   -b BASE_PORT, --base-port BASE_PORT
                         Base listening port to use for SOCKS proxies
   -n, --no-current-ip   Don't spray from the current IP, only use SSH proxies
+
+Subnet Proxy:
+  Send traffic from random addresses within IP subnet
+
+  --interface INTERFACE
+                        Interface to send packets on
+  --subnet SUBNET       Subnet to send packets from
 ```
 
 ## Writing your own Spray Modules
