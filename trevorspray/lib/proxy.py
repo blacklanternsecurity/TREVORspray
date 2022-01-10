@@ -117,7 +117,7 @@ class ProxyThread(threading.Thread):
                             log.info('NOTE: If you are seeing multiple "account is locked" messages after your first 10 attempts or so this may indicate Azure AD Smart Lockout is enabled.')
                             self.trevor._stop = True
                             self._running = False
-                            break
+                            return
 
                 print(f'       Sprayed {self.trevor.sprayed_counter:,} / {len(self.trevor.options.users):,} accounts\r', end='', flush=True)
 

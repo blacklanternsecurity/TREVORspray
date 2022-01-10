@@ -133,6 +133,7 @@ class TrevorSpray:
 
     def stop(self):
 
+        log.debug('Stopping sprayer')
         self._stop = True
         # write valid users
         util.update_file(self.existent_users_file, self.existent_users)
