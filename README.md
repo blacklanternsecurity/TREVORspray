@@ -23,9 +23,7 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
 ## Installation:
 ```
-$ git clone https://github.com/blacklanternsecurity/trevorspray
-$ cd trevorspray
-$ pip install -r requirements.txt
+$ pip install git+https://github.com/blacklanternsecurity/trevorspray
 ```
 
 ## How To - O365
@@ -81,10 +79,10 @@ trevorspray.py -e f.last.txt -p 'Fall2021!'
 ## TREVORspray - Help:
 ```
 $ ./trevorspray.py --help
-usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-j JITTER] [--url URL] [-v] [-s USER@SERVER [USER@SERVER ...]]
-                   [-i KEY] [-b BASE_PORT] [-n] [-nl] [-m {anyconnect,msol}] [-t TIMEOUT]
+usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-t THREADS] [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-ld LOCKOUT_DELAY] [-j JITTER] [-nl]
+                   [--timeout TIMEOUT] [--random-useragent] [-m {okta,anyconnect,adfs,msol}] [-6] [--proxy PROXY] [-v] [-s USER@SERVER [USER@SERVER ...]] [-i KEY] [-b BASE_PORT] [-n]
 
-Execute password sprays against O365, optionally proxying the traffic through SSH hosts
+A password sprayer with the option to load-balance traffic through SSH hosts
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -92,16 +90,31 @@ optional arguments:
                         Usernames(s) and/or file(s) containing usernames
   -p PASSWORDS [PASSWORDS ...], --passwords PASSWORDS [PASSWORDS ...]
                         Password(s) that will be used to perform the password spray
+  --url URL             The URL to spray against
+  -t THREADS, --threads THREADS
+                        Max number of concurrent requests (default: 1)
   -r DOMAIN [DOMAIN ...], --recon DOMAIN [DOMAIN ...]
-                        Retrieves info related to authentication, email, Azure, Microsoft 365, etc.
+                        Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.
   -f, --force           Forces the spray to continue and not stop when multiple account lockouts are detected
   -d DELAY, --delay DELAY
                         Sleep for this many seconds between requests
+  -ld LOCKOUT_DELAY, --lockout-delay LOCKOUT_DELAY
+                        Sleep for this many additional seconds when a lockout is encountered
   -j JITTER, --jitter JITTER
                         Add a random delay of up to this many seconds between requests
-  --url URL             The URL to spray against
+  -nl, --no-loot        Don't execute loot activites for valid accounts
+  --timeout TIMEOUT     Connection timeout in seconds (default: 10)
+  --random-useragent    Add a random value to the User-Agent for each request
+  -m {okta,anyconnect,adfs,msol}, --module {okta,anyconnect,adfs,msol}
+                        Spray module to use (default: msol)
+  -6, --prefer-ipv6     Prefer IPv6 over IPv4
+  --proxy PROXY         Proxy to use for HTTP and HTTPS requests
   -v, --verbose, --debug
                         Show which proxy is being used for each request
+
+SSH Proxy:
+  Round-robin request through remote systems via SSH (overrides --threads)
+
   -s USER@SERVER [USER@SERVER ...], --ssh USER@SERVER [USER@SERVER ...]
                         Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
   -i KEY, -k KEY, --key KEY
@@ -109,11 +122,6 @@ optional arguments:
   -b BASE_PORT, --base-port BASE_PORT
                         Base listening port to use for SOCKS proxies
   -n, --no-current-ip   Don't spray from the current IP, only use SSH proxies
-  -nl, --no-loot        Don't execute loot activites for valid accounts
-  -t TIMEOUT, --timeout TIMEOUT
-                        Connection timeout in seconds (default: 10)
-  -m {anyconnect,msol}, --module {anyconnect,msol}
-                        Spray module to use (default: msol)
 ```
 
 ## Writing your own Spray Modules
