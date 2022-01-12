@@ -39,8 +39,8 @@ def main():
 
     parser = argparse.ArgumentParser(description='A password sprayer with the option to load-balance traffic through SSH hosts')
 
-    parser.add_argument('-u', '--users', nargs='+', help='Usernames(s) and/or file(s) containing usernames')
-    parser.add_argument('-p', '--passwords', nargs='+', help='Password(s) that will be used to perform the password spray')
+    parser.add_argument('-u', '--users', nargs='+', default=[], help='Usernames(s) and/or file(s) containing usernames')
+    parser.add_argument('-p', '--passwords', nargs='+', default=[], help='Password(s) that will be used to perform the password spray')
     parser.add_argument('--url', help='The URL to spray against')
     parser.add_argument('-t', '--threads', type=int, default=1, help='Max number of concurrent requests (default: 1)')
     parser.add_argument('-r', '--recon', metavar='DOMAIN', nargs='+', help='Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.')

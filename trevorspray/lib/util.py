@@ -20,7 +20,7 @@ windows_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.
 
 def highlight_json(j):
 
-    if type(j) == dict:
+    if type(j) in [dict, list, set, tuple]:
         j = json.dumps(j, indent=4)
 
     return highlight(j, JsonLexer(), TerminalFormatter())
