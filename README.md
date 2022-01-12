@@ -3,7 +3,7 @@ TREVORspray is a modular password sprayer with threading, SSH proxying, loot mod
 
 By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
-![trevorspray](https://user-images.githubusercontent.com/20261699/92338226-e366d680-f07c-11ea-8664-7b320783dc98.png)
+![trevorspray-demo](https://user-images.githubusercontent.com/20261699/149219712-8549e15c-2eee-4d7a-a615-e8882b693c3f.gif)
 
 ## Features
 - Supported modules:
@@ -78,10 +78,11 @@ trevorspray.py -e f.last.txt -p 'Fall2021!'
 
 ## TREVORspray - Help:
 ```
-$ ./trevorspray.py --help
-usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-t THREADS] [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-ld LOCKOUT_DELAY] [-j JITTER] [-nl]
-                   [--timeout TIMEOUT] [--random-useragent] [-m {okta,anyconnect,adfs,msol}] [-6] [--proxy PROXY] [-v] [-s USER@SERVER [USER@SERVER ...]] [-i KEY] [-b BASE_PORT] [-n]
-                   [--interface INTERFACE] [--subnet SUBNET]
+$ trevorspray.py --help
+usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-t THREADS]
+                   [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-ld LOCKOUT_DELAY] [-j JITTER] [-e] [-nl] [--timeout TIMEOUT]
+                   [--random-useragent] [-m {okta,anyconnect,adfs,msol}] [-6] [--proxy PROXY] [-v]
+                   [-s USER@SERVER [USER@SERVER ...]] [-i KEY] [-b BASE_PORT] [-n] [--interface INTERFACE] [--subnet SUBNET]
 
 A password sprayer with the option to load-balance traffic through SSH hosts
 
@@ -103,6 +104,8 @@ optional arguments:
                         Sleep for this many additional seconds when a lockout is encountered
   -j JITTER, --jitter JITTER
                         Add a random delay of up to this many seconds between requests
+  -e, --exit-on-success
+                        Stop spray when a valid cred is found
   -nl, --no-loot        Don't execute loot activites for valid accounts
   --timeout TIMEOUT     Connection timeout in seconds (default: 10)
   --random-useragent    Add a random value to the User-Agent for each request
@@ -117,7 +120,8 @@ SSH Proxy:
   Round-robin traffic through remote systems via SSH (overrides --threads)
 
   -s USER@SERVER [USER@SERVER ...], --ssh USER@SERVER [USER@SERVER ...]
-                        Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
+                        Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used
+                        once per round
   -i KEY, -k KEY, --key KEY
                         Use this SSH key when connecting to proxy hosts
   -b BASE_PORT, --base-port BASE_PORT
