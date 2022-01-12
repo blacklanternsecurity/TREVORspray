@@ -13,6 +13,16 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
   - `anyconnect` (Cisco VPN)
   - See below for how to create your own
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
+- O365 loot module automatically checks for MFA bypasses (disable with `--no-loot`)
+  - IMAP
+  - SMTP
+  - POP
+  - EWS (Exchange Web Services) - Automatically retrieves GAL (Global Address Book)
+  - EAS (Exchange ActiveSync)
+  - EXO (Exchange Online PowerShell)
+  - UM (Exchange Unified Messaging)
+  - AutoDiscover - Automatically retrieves OAB (Offline Address Book)
+  - Azure Portal Access
 - Automatic cancel/resume (remembers already-tried user/pass combos in `~/.trevorspray/tried_logins.txt`)
 - Round-robin proxy through multiple IPs with `--ssh`
 - Automatic infinite reconnect/retry if a proxy goes down (or if you lose internet)
