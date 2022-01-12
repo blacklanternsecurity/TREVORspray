@@ -66,7 +66,7 @@ def update_file(filename, l):
             for line in f:
                 final_list[line.strip()] = True
     except OSError as e:
-        log.verbose(f'Could not read file {filename}: {e}')
+        log.debug(f'Could not read file {filename}: {e}')
     for entry in l:
         final_list[entry] = True
     with open(filename, 'w') as f:
@@ -83,7 +83,7 @@ def read_file(filename, key=lambda x: True):
                 if key(entry):
                     final_list[entry] = True
     except OSError as e:
-        log.verbose(f'Could not read file {filename}: {e}')
+        log.debug(f'Could not read file {filename}: {e}')
 
     return final_list
 

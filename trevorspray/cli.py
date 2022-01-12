@@ -48,6 +48,7 @@ def main():
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
     parser.add_argument('-ld', '--lockout-delay', type=float, default=0, help='Sleep for this many additional seconds when a lockout is encountered')
     parser.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
+    parser.add_argument('-e', '--exit-on-success', action='store_true', help='Stop spray when a valid cred is found')
     parser.add_argument('-nl', '--no-loot', action='store_true', help='Don\'t execute loot activites for valid accounts')
     parser.add_argument('--timeout', type=float, default=10, help='Connection timeout in seconds (default: 10)')
     parser.add_argument('--random-useragent', action='store_true', help='Add a random value to the User-Agent for each request')

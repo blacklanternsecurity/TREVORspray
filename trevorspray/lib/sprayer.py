@@ -136,7 +136,7 @@ class TrevorSpray:
         # wait until finished
         while not all([not proxy.running for proxy in self.proxies]):
             log.verbose('Waiting for proxy threads to finish')
-            time.sleep(1)
+            time.sleep(2)
 
 
     def start(self):

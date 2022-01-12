@@ -130,6 +130,8 @@ class ProxyThread(threading.Thread):
                         exists = True
                         log.success(f'{user}:{password} - {msg}')
                         self.trevor.valid_logins.append(f'{user}:{password}')
+                        if self.trevor.options.exit_on_success:
+                            self.trevor._stop = True
                     elif locked:
                         log.error(f'{user}:{password} - {msg}')
                     elif exists:
@@ -143,8 +145,13 @@ class ProxyThread(threading.Thread):
                     if locked:
                         self.trevor.lockout_counter += 1
 
-                    if valid and not self.trevor.options.no_loot:
-                        self.trevor.sprayer.loot((user, password))
+                    if valid:
+                        if not self.trevor.options.no_loot:
+                            self.trevor.sprayer.loot((user, password))
+                        if self.trevor.options.exit_on_success:
+                            self._running = False
+                            self.q = None
+                            return
 
                     # If the force flag isn't set and lockout count is 10 we'll ask if the user is sure they want to keep spraying
                     if not self.trevor.options.force and self.trevor.lockout_counter == 10 and self.trevor.lockout_question == False:
@@ -160,10 +167,7 @@ class ProxyThread(threading.Thread):
                         if choice in no:
                             log.info('Cancelling the password spray.')
                             log.info('NOTE: If you are seeing multiple "account is locked" messages after your first 10 attempts or so this may indicate Azure AD Smart Lockout is enabled.')
-                            self.trevor._stop = True
-                            self._running = False
-                            self.q = None
-                            return
+                            return self.cancel_spray()
 
                 print(f'       Sprayed {self.trevor.sprayed_counter:,} / {self.trevor.sprayed_possible:,} accounts\r', end='', flush=True)
 
@@ -193,9 +197,15 @@ class ProxyThread(threading.Thread):
                     log.error(traceback.format_exc())
                 else:
                     log.error(f'Encountered error (-v to debug): {e}')
-                self.trevor._stop = True
-                self._running = False
+                self.cancel_spray()
                 break
+
+
+    def cancel_spray(self):
+
+        self.trevor._stop = True
+        self._running = False
+        self.q = None
 
 
     @property
