@@ -6,6 +6,7 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 ![trevorspray-demo](https://user-images.githubusercontent.com/20261699/149219712-8549e15c-2eee-4d7a-a615-e8882b693c3f.gif)
 
 ## Features
+- Threads, lots of threads
 - Supported modules:
   - `msol` (Office 365)
   - `adfs` (Active Directory Federation Services)
@@ -24,12 +25,13 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
   - AutoDiscover - Automatically retrieves OAB (Offline Address Book)
   - Azure Portal Access
 - Automatic cancel/resume (remembers already-tried user/pass combos in `~/.trevorspray/tried_logins.txt`)
-- Round-robin proxy through multiple IPs with `--ssh`
+- Round-robin proxy through multiple IPs with `--ssh` or `--subnet`
 - Automatic infinite reconnect/retry if a proxy goes down (or if you lose internet)
 - Spoofs `User-Agent` and other signatures to look like legitimate auth traffic
 - Logs everything to `~/.trevorspray/trevorspray.log`
 - Saves valid usernames to `~/.trevorspray/valid_usernames.txt`
-- Optional `--delay` and `--jitter` between request to bypass lockout countermeasures
+- Optional `--delay`, `--jitter`, and `--lockout-delay` between request to bypass lockout countermeasures
+- IPv6 support
 
 ## Installation:
 ```
