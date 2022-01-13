@@ -96,10 +96,10 @@ class TrevorSpray:
                     '''
 
             if (self.options.passwords and self.options.users):
-                log.info(f'Spraying {len(self.options.users):,} users * {len(self.options.passwords):,} passwords against {self.options.url} at {time.ctime()}')
+                log.info(f'Spraying {len(self.options.users):,} users * {len(self.options.passwords):,} passwords against {self.sprayer.url} at {time.ctime()}')
                 self.spray()
 
-                log.info(f'Finished spraying {len(self.options.users):,} users against {self.options.url} at {time.ctime()}')
+                log.info(f'Finished spraying {len(self.options.users):,} users against {self.sprayer.url} at {time.ctime()}')
                 for success in self.valid_logins:
                     log.success(success)
 
