@@ -1,8 +1,8 @@
 ### Password spraying is one of the great joys of pentesting. Or at least, it used to be.
 
-Classically password spraying has been the single lowest-effort and highest-yield technique for gaining an initial foothold in an organization. This made it pretty fun. You start by gathering up a big list of emails, then you kick off a spray with a stupid password like "Spring2022!", and spend the next hour getting disproportionately large and debatably undeserved hits of dopamine as you slowly discover just how many employees are using that stupid password.
+Classically password spraying has been the single lowest-effort and highest-yield technique for gaining an initial foothold in an organization. This made it pretty fun. You start by gathering up a big list of emails, then you kick off a spray with a stupid password like "Spring2022!", and spend the next ten minutes getting disproportionately large and debatably undeserved hits of dopamine as you discover just how many employees are using that stupid password.
 
-But alas, with increasing Multi-Factor coverage and defensive countermeasures like smart lockout, password spraying becoming more and more of a pain.
+But alas, with increasing Multi-Factor coverage and defensive countermeasures like smart lockout, password spraying becoming more and more of a chore.
 
 ![slow-password-sprays](https://user-images.githubusercontent.com/20261699/149404528-8c89f989-299a-4bd0-831c-c16c908a9f86.png)
 
