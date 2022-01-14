@@ -31,6 +31,7 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
   - UM (Exchange Unified Messaging)
   - AutoDiscover - Automatically retrieves OAB (Offline Address Book)
   - Azure Portal Access
+- Domain `--recon` to list MX/TXT records, O365 tenant info, federation configuration, autodiscover, etc.
 
 ## Installation:
 ```
