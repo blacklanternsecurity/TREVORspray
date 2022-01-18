@@ -168,7 +168,7 @@ class SprayModule(BaseSprayModule):
     # default target URL
     default_url = 'https://login.evilcorp.com/'
     # body of request
-    body = 'user={username}&pass={password}&group={otherthing}'
+    request_data = 'user={username}&pass={password}&group={otherthing}'
     # HTTP headers
     headers = {}
     # HTTP cookies
@@ -183,10 +183,12 @@ class SprayModule(BaseSprayModule):
     def initialize(self):
         '''
         Get additional arguments from user at runtime
+        NOTE: These can also be passed via environment variables beginning with "TREVOR_":
+            TREVOR_otherthing=asdf
         '''
         while not self.runtimeparams.get('otherthing', ''):
             self.runtimeparams.update({
-                'otherthing': input("What's that other thing?")
+                'otherthing': input("What's that other thing? ")
             })
 
         return True

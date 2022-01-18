@@ -1,5 +1,6 @@
 import os
 import requests
+from urllib.parse import quote
 from ..util import windows_user_agent
 from ..errors import TREVORSprayError
 
@@ -44,7 +45,7 @@ class BaseSprayModule:
 
         # enumerate environment variables
         self.runtimeparams = {}
-        keyword = 'trevorspray_'
+        keyword = 'TREVOR_'
         for k,v in os.environ.items():
             if k.startswith(keyword):
                 _k = k.split(keyword)[-1]
@@ -65,36 +66,29 @@ class BaseSprayModule:
         '''
 
         runtimeparams = {
-            'username': username,
-            'password': password
+            self.userparam: username,
+            self.passparam: password
         }
+        runtimeparams.update(self.runtimeparams)
 
-        url = self.url.format(**self.globalparams, **self.runtimeparams)
+        url = self.url.format(**self.globalparams, **runtimeparams)
         if not url.lower().startswith('http'):
             url = f'https://{url}'
 
         data = None
+        params = dict(self.globalparams)
+        params.update(runtimeparams)
         if type(self.request_data) == dict:
             data = dict(self.request_data)
-            data.update({
-                self.userparam: username,
-                self.passparam: password
-            })
-            data.update(self.globalparams)
+            data.update(params)
         elif type(self.request_data) == str:
-            data = self.request_data.format(
-                username=username,
-                password=password,
-                **self.globalparams
-            )
+            params = {k: quote(v) for k,v in params.items()}
+            data = self.request_data.format(**params)
 
         json = None
         if type(self.request_json) == dict:
             json = dict(self.request_json)
-            json.update({
-                self.userparam: username,
-                self.passparam: password
-            })
+            json.update(params)
 
         return requests.Request(
             method=self.method,
