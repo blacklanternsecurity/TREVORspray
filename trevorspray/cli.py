@@ -39,6 +39,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='A password sprayer with the option to load-balance traffic through SSH hosts')
 
+    parser.add_argument('-m', '--module', choices=module_choices, default='msol', help='Spray module to use (default: msol)')
     parser.add_argument('-u', '--users', nargs='+', default=[], help='Usernames(s) and/or file(s) containing usernames')
     parser.add_argument('-p', '--passwords', nargs='+', default=[], help='Password(s) that will be used to perform the password spray')
     parser.add_argument('--url', help='The URL to spray against')
@@ -52,7 +53,6 @@ def main():
     parser.add_argument('-nl', '--no-loot', action='store_true', help='Don\'t execute loot activites for valid accounts')
     parser.add_argument('--timeout', type=float, default=10, help='Connection timeout in seconds (default: 10)')
     parser.add_argument('--random-useragent', action='store_true', help='Add a random value to the User-Agent for each request')
-    parser.add_argument('-m', '--module', choices=module_choices, default='msol', help='Spray module to use (default: msol)')
     parser.add_argument('-6', '--prefer-ipv6', action='store_true', help='Prefer IPv6 over IPv4')
     parser.add_argument('--proxy', help='Proxy to use for HTTP and HTTPS requests')
     parser.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')

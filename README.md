@@ -6,6 +6,12 @@ By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/blacklanternsecurity/nmappalyzer/master/LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.6+-blue)](https://www.python.org)
 
+## Installation:
+~~~bash
+pip install git+https://github.com/blacklanternsecurity/trevorproxy
+pip install git+https://github.com/blacklanternsecurity/trevorspray
+~~~
+
 See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool demos!
 
 ![trevorspray-demo](https://user-images.githubusercontent.com/20261699/149219712-8549e15c-2eee-4d7a-a615-e8882b693c3f.gif)
@@ -37,12 +43,6 @@ See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool d
   - AutoDiscover - Automatically retrieves OAB (Offline Address Book)
   - Azure Portal Access
 - Domain `--recon` to list MX/TXT records, O365 tenant info, federation configuration, autodiscover, etc.
-
-## Installation:
-```
-$ pip install git+https://github.com/blacklanternsecurity/trevorproxy
-$ pip install git+https://github.com/blacklanternsecurity/trevorspray@trevorspray-v2
-```
 
 ## How To - O365
 - First, get a list of emails for `corp.com` and perform a spray to see if the default configuration works. Usually it does.
@@ -106,6 +106,8 @@ A password sprayer with the option to load-balance traffic through SSH hosts
 
 optional arguments:
   -h, --help            show this help message and exit
+  -m {okta,anyconnect,adfs,msol}, --module {okta,anyconnect,adfs,msol}
+                        Spray module to use (default: msol)
   -u USERS [USERS ...], --users USERS [USERS ...]
                         Usernames(s) and/or file(s) containing usernames
   -p PASSWORDS [PASSWORDS ...], --passwords PASSWORDS [PASSWORDS ...]
@@ -127,8 +129,6 @@ optional arguments:
   -nl, --no-loot        Don't execute loot activites for valid accounts
   --timeout TIMEOUT     Connection timeout in seconds (default: 10)
   --random-useragent    Add a random value to the User-Agent for each request
-  -m {okta,anyconnect,adfs,msol}, --module {okta,anyconnect,adfs,msol}
-                        Spray module to use (default: msol)
   -6, --prefer-ipv6     Prefer IPv6 over IPv4
   --proxy PROXY         Proxy to use for HTTP and HTTPS requests
   -v, --verbose, --debug
