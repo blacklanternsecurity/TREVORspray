@@ -40,7 +40,8 @@ See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool d
 
 ## Installation:
 ```
-$ pip install -U git+https://github.com/blacklanternsecurity/trevorspray@trevorspray-v2
+$ pip install git+https://github.com/blacklanternsecurity/trevorproxy
+$ pip install git+https://github.com/blacklanternsecurity/trevorspray@trevorspray-v2
 ```
 
 ## How To - O365
