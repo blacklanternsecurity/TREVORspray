@@ -128,7 +128,9 @@ def is_url(d):
 
 def download_file(url, filename, **kwargs):
 
+    log.debug(f'Downloading file from {url} to {filename}, {kwargs}')
     with requests.get(url, stream=True, **kwargs) as response:
+        log.debug(f'Download result: HTTP {response.status_code}, Size: {len(response.text)}')
         response.raise_for_status()
         with open(filename, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):  

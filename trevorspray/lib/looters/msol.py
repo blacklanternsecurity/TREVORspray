@@ -277,9 +277,10 @@ class MSOLLooter(Looter):
                         lzx_file = self.loot_dir / lzx_url.split('/')[-1]
                         log.success(f'Downloading LZX for {username} to {lzx_file}')
                         try:
-                            download_file(url, str(lzx_file), verify=False, auth=auth)
+                            download_file(lzx_url, str(lzx_file), verify=False, auth=auth)
                         except Exception as e:
                             log.warning(f'Failed to retrieve LZX file at {lzx_url}')
+                        log.success('Successfully downloaded LZX file. See README for instructions on how to extract data.')
                     else:
                         log.warning(f'No LZX link found for {username}')
 
