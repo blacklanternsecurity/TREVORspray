@@ -3,3 +3,4 @@ pysocks
 pygments
 exchangelib
 trevorproxy
+tldextract
