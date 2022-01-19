@@ -269,19 +269,24 @@ class MSOLLooter(Looter):
                         auth=auth,
                         verify=False
                     )
-                    found = re.search(r'>(.+lzx)<', oab_response.text)
+                    lzx_found = False
+                    for line in oab_response.text.splitlines():
+                        found = ''
+                        if not line.strip().lower().startswith('<template'):
+                            found = re.search(r'>(.+\.lzx)<', line)
 
-                    if found:
-                        lzx_url = f'{oab_url}{found.group(1)}'
-                        log.success(f'Found LZX for {username}: {lzx_url}')
-                        lzx_file = self.loot_dir / lzx_url.split('/')[-1]
-                        log.success(f'Downloading LZX for {username} to {lzx_file}')
-                        try:
-                            download_file(lzx_url, str(lzx_file), verify=False, auth=auth)
-                        except Exception as e:
-                            log.warning(f'Failed to retrieve LZX file at {lzx_url}')
-                        log.success('Successfully downloaded LZX file. See README for instructions on how to extract data.')
-                    else:
+                        if found:
+                            lzx_url = f'{oab_url}{found.group(1)}'
+                            log.success(f'Found LZX for {username}: {lzx_url}')
+                            lzx_file = self.loot_dir / lzx_url.split('/')[-1]
+                            log.success(f'Downloading LZX for {username} to {lzx_file}')
+                            try:
+                                download_file(lzx_url, str(lzx_file), verify=False, auth=auth)
+                                log.success('Successfully downloaded LZX file. See README for instructions on how to extract data.')
+                                lzx_found = True
+                            except Exception as e:
+                                log.warning(f'Failed to retrieve LZX file at {lzx_url}')
+                    if not lzx_found:
                         log.warning(f'No LZX link found for {username}')
 
                 else:
