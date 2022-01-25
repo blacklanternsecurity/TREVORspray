@@ -250,6 +250,8 @@ CREDIT WHERE CREDIT IS DUE - MANY THANKS TO:
 - [@Mrtn9](https://twitter.com/Mrtn9) for his Python port of [MSOLSpray](https://github.com/MartinIngesen/MSOLSpray)
 - [@KnappySqwurl](https://twitter.com/KnappySqwurl) for being a splunk wizard
 - [@CarsonSallis](https://github.com/CarsonSallis) for the O365 MFA bypasses
+- [@DrAzureAD](https://twitter.com/DrAzureAD) for the Azure AD recon features
+- [@nyxgeek](https://twitter.com/nyxgeek) for the OneDrive user enumeration
 
 ![trevor](https://user-images.githubusercontent.com/20261699/92336575-27071380-f070-11ea-8dd4-5ba42c7d04b7.jpeg)
 
