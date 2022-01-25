@@ -20,6 +20,7 @@ class AnyConnect(BaseSprayModule):
 </config-auth>'''
     
     body_plain = 'group_list={group}&username={username}&password={password}&secondary_username=&secondary_password='
+    body_plain_no_group = 'username={username}&password={password}'
 
     headers_xml = {
         'User-Agent': 'AnyConnect Windows 4.10.01075',
@@ -91,7 +92,6 @@ class AnyConnect(BaseSprayModule):
         # plain auth
         elif initial_response.status_code in (301, 302):
             self.auth_type = 'plain'
-            self.request_data = self.body_plain
             self.headers = self.headers_plain
             host = '/'.join(initial_response.url.split('/', 3)[:3])
             self.url = host + initial_response.headers['Location']
@@ -109,32 +109,37 @@ class AnyConnect(BaseSprayModule):
                 },
                 verify=False
             )
-            try:
-                parsed_plain_response = etree.fromstring(plain_response.content)
-            except Exception as e:
-                log.error(f'Error parsing content: {e}, {plain_response.content}')
+            if plain_response.status_code == 200:
+                try:
+                    parsed_plain_response = etree.fromstring(plain_response.content)
+                except Exception as e:
+                    log.error(f'Error parsing content: {e}, {plain_response.content}')
+                    return False
+                for option in parsed_plain_response.iterfind('.//option'):
+                    group = option.attrib.get('value', '')
+                    groupname = option.text
+                    if group and groupname:
+                        tunnelgroups[groupname] = {
+                            'group': group,
+                            'groupname': groupname
+                        }
+            else:
+                log.error(f'{plain_response} while visiting {self.url}')
                 return False
-            for option in parsed_plain_response.iterfind('.//option'):
-                group = option.attrib.get('value', '')
-                groupname = option.text
-                if group and groupname:
-                    tunnelgroups[groupname] = {
-                        'group': group,
-                        'groupname': groupname
-                    }
+            if tunnelgroups:
+                self.request_data = self.body_plain
+            else:
+                self.request_data = self.body_plain_no_group
 
         else:
             log.error(f'Received invalid response code "{initial_response.status_code}" from url: {url}')
 
-        if not tunnelgroups:
-            log.error('Failed to enumerate AnyConnect tunnel groups')
-            return False
-        elif len(tunnelgroups) == 1:
+        if len(tunnelgroups) == 1:
             for alias, tunnelgroup in tunnelgroups.items():
                 selected_tunnelgroup = tunnelgroup
                 log.info(f'Found tunnel group "{alias}"')
-        else:
 
+        elif tunnelgroups:
             while selected_tunnelgroup is None:
                 try:
                     tunnelgroup = tunnelgroups[self.globalparams.get('group', None)]
@@ -150,8 +155,9 @@ class AnyConnect(BaseSprayModule):
                 for k,v in selected_tunnelgroup.items():
                     log.debug(f'    {k}: {v}')
 
-        log.info(f'Using tunnel group "{selected_tunnelgroup["groupname"]}"')
-        self.globalparams.update(selected_tunnelgroup)
+        if selected_tunnelgroup:
+            log.info(f'Using tunnel group "{selected_tunnelgroup["groupname"]}"')
+            self.globalparams.update(selected_tunnelgroup)
 
         return True
 
