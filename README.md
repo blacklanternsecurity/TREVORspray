@@ -72,6 +72,8 @@ trevorspray --recon evilcorp.com
 trevorspray --recon evilcorp.com -u emails.txt --threads 10
 ```
 
+![recon-user-enumeration](https://user-images.githubusercontent.com/20261699/151052308-d938bf6c-f335-4d3e-9c3c-1fd79a188e73.gif)
+
 ## Example: Spray against discovered "token_endpoint" URL
 ```bash
 trevorspray -u emails.txt -p 'Welcome123' --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
