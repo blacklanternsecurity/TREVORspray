@@ -1,10 +1,10 @@
 import re
 import logging
 import requests
+from ..util import *
 from .base import Looter
 from contextlib import suppress
 from requests.auth import HTTPBasicAuth
-from ..util import windows_user_agent, highlight_json, highlight_xml, download_file
 
 
 log = logging.getLogger('trevorspray.looters.msol')
@@ -182,13 +182,10 @@ class MSOLLooter(Looter):
 
         response = None
         with suppress(Exception):
-            response = requests.options(
+            response = request(
+                'OPTIONS',
                 url,
-                headers = {
-                    'User-Agent': windows_user_agent
-                },
-                auth=HTTPBasicAuth(username, password),
-                verify=False
+                auth=HTTPBasicAuth(username, password)
             )
             response_headers = dict(getattr(response, 'headers', {}))
 
@@ -210,13 +207,10 @@ class MSOLLooter(Looter):
 
         response = None
         with suppress(Exception):
-            response = requests.options(
+            response = request(
+                'OPTIONS',
                 url,
-                headers = {
-                    'User-Agent': windows_user_agent
-                },
-                auth=HTTPBasicAuth(username, password),
-                verify=False
+                auth=HTTPBasicAuth(username, password)
             )
 
         if getattr(response, 'status_code', 0) == 200:
@@ -235,15 +229,14 @@ class MSOLLooter(Looter):
 
         response = None
         try:
-            response = requests.post(
+            response = request(
+                'POST',
                 url,
                 headers = {
-                    'User-Agent': windows_user_agent,
                     'Content-Type': 'text/xml'
                 },
                 auth=auth,
-                data=f'<?xml version="1.0" encoding="utf-8"?><Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006"><Request><EMailAddress>{username}</EMailAddress><AcceptableResponseSchema>http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a</AcceptableResponseSchema></Request></Autodiscover>',
-                verify=False
+                data=f'<?xml version="1.0" encoding="utf-8"?><Autodiscover xmlns="http://schemas.microsoft.com/exchange/autodiscover/outlook/requestschema/2006"><Request><EMailAddress>{username}</EMailAddress><AcceptableResponseSchema>http://schemas.microsoft.com/exchange/autodiscover/outlook/responseschema/2006a</AcceptableResponseSchema></Request></Autodiscover>'
             )
 
             if getattr(response, 'status_code', 0) == 200:
@@ -259,14 +252,12 @@ class MSOLLooter(Looter):
                     log.success(f'Found OAB URL for {username}: {found.group(1)}')
                     oab_url = found.group(1)
 
-                    oab_response = requests.get(
-                        f'{oab_url}/oab.xml',
+                    oab_response = request(
+                        url=f'{oab_url}/oab.xml',
                         headers = {
-                            'User-Agent': windows_user_agent,
                             'Content-Type': 'text/xml'
                         },
-                        auth=auth,
-                        verify=False
+                        auth=auth
                     )
                     lzx_found = False
                     for line in oab_response.text.splitlines():
@@ -332,11 +323,11 @@ class MSOLLooter(Looter):
         }
 
         try:
-            response = requests.post(
+            response = request(
+                'POST',
                 'https://login.microsoftonline.com/common/oauth2/token',
                 headers=headers,
-                data=request_data,
-                verify=False
+                data=request_data
             )
 
             valid, exists, locked, msg = MSOL.check_response(None, response)
@@ -370,10 +361,10 @@ class MSOLLooter(Looter):
 
         response = None
         try:
-            response = requests.post(
+            response = request(
+                'POST',
                 url,
                 headers = {
-                    'User-Agent': windows_user_agent,
                     'Content-Type': 'text/xml; charset=utf-8'
                 },
                 auth=HTTPBasicAuth(username, password),
@@ -382,8 +373,7 @@ class MSOLLooter(Looter):
     <soap:Body>
     <GetUMProperties xmlns="https://schemas.microsoft.com/exchange/services/2006/messages" />
     </soap:Body>
-    </soap:Envelope>''',
-                verify=False
+    </soap:Envelope>'''
             )
             response_headers = dict(getattr(response, 'headers', {}))
 
