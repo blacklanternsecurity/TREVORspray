@@ -129,9 +129,30 @@ def is_url(d):
 def download_file(url, filename, **kwargs):
 
     log.debug(f'Downloading file from {url} to {filename}, {kwargs}')
-    with requests.get(url, stream=True, **kwargs) as response:
+    with request('GET', url, stream=True, **kwargs) as response:
         log.debug(f'Download result: HTTP {response.status_code}, Size: {len(response.text)}')
         response.raise_for_status()
         with open(filename, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):  
                 f.write(chunk)
+
+
+def request(*args, **kwargs):
+
+    if not args and 'method' not in kwargs:
+        kwargs['method'] = 'GET'
+
+    headers = kwargs.get('headers', {})
+    if 'User-Agent' not in headers:
+        headers.update({
+            'User-Agent': windows_user_agent
+        })
+    kwargs['headers'] = headers
+
+    if not 'verify' in kwargs:
+        kwargs['verify'] = False
+
+    log.debug(f'Web request: {str(args)}, {str(kwargs)}')
+    response = requests.request(*args, **kwargs)
+    log.debug(f'{response} (Length: {len(response.content)})')
+    return response

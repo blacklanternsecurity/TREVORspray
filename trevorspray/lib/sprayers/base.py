@@ -1,8 +1,10 @@
-import os
+import logging
 import requests
 from urllib.parse import quote
 from ..util import windows_user_agent
 from ..errors import TREVORSprayError
+
+log = logging.getLogger('trevorspray.sprayers.base')
 
 class BaseSprayModule:
 
@@ -43,14 +45,6 @@ class BaseSprayModule:
         if self.ipv6_url and self.url == self.default_url and self.trevor.options.prefer_ipv6:
             self.url = self.ipv6_url
 
-        # enumerate environment variables
-        self.runtimeparams = {}
-        keyword = 'TREVOR_'
-        for k,v in os.environ.items():
-            if k.startswith(keyword):
-                _k = k.split(keyword)[-1]
-                self.runtimeparams[_k] = v
-
         # make sure we have a user-agent
         if not self.headers.get('User-Agent', ''):
             self.headers['User-Agent'] = windows_user_agent
@@ -60,16 +54,20 @@ class BaseSprayModule:
         return True
 
 
+    def create_params(self, username, password):
+
+        return {
+            self.userparam: username,
+            self.passparam: password
+        }
+
+
     def create_request(self, username, password):
         '''
         Returns request.Request() object
         '''
 
-        runtimeparams = {
-            self.userparam: username,
-            self.passparam: password
-        }
-        runtimeparams.update(self.runtimeparams)
+        runtimeparams = self.create_params(username, password)
 
         url = self.url.format(**self.globalparams, **runtimeparams)
         if not url.lower().startswith('http'):
@@ -78,6 +76,7 @@ class BaseSprayModule:
         data = None
         params = dict(self.globalparams)
         params.update(runtimeparams)
+        params.update(self.trevor.runtimeparams)
         if type(self.request_data) == dict:
             data = dict(self.request_data)
             data.update(params)

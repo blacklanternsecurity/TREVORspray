@@ -14,16 +14,15 @@ class MSOLLooter(Looter):
 
     def looter_legacy_auth(self):
 
-        username,password = self.credential
-        self.test_imap(username, password)
-        self.test_smtp(username, password)
-        self.test_pop(username, password)
-        self.test_ews(username, password)
-        self.test_eas(username, password)
-        self.test_exo_pwsh(username, password)
-        self.test_autodiscover(username, password)
-        self.test_azure_management(username, password)
-        self.test_um(username, password)
+        self.test_imap(*self.credential)
+        self.test_smtp(*self.credential)
+        self.test_pop(*self.credential)
+        self.test_ews(*self.credential)
+        self.test_eas(*self.credential)
+        self.test_exo_pwsh(*self.credential)
+        self.test_autodiscover(*self.credential)
+        self.test_azure_management(*self.credential)
+        self.test_um(*self.credential)
 
 
     def test_imap(self, username, password):

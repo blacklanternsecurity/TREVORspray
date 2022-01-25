@@ -18,7 +18,7 @@ class ADFS(BaseSprayModule):
 
     def initialize(self):
 
-        discovery = DomainDiscovery(self.url)
+        discovery = DomainDiscovery(self.trevor, self.url)
         parsed_url = urlparse(self.url)
         userrealm = discovery.getuserrealm()
         namespace = userrealm.get('NameSpaceType', 'Unknown')

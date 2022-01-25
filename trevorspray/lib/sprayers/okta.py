@@ -29,8 +29,8 @@ class Okta(BaseSprayModule):
         if not self.trevor.options.delay or self.trevor.options.jitter:
             log.warning(f'Okta hides lockout failures by default! --delay is recommended.')
 
-        while not self.runtimeparams.get('subdomain', ''):
-            self.runtimeparams.update({
+        while not self.trevor.runtimeparams.get('subdomain', ''):
+            self.trevor.runtimeparams.update({
                 'subdomain': input('Enter target subdomain (<subdomain>.okta.com): ').strip()
             })
 

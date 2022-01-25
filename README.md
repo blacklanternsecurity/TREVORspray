@@ -42,7 +42,15 @@ See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool d
   - UM (Exchange Unified Messaging)
   - AutoDiscover - Automatically retrieves OAB (Offline Address Book)
   - Azure Portal Access
-- Domain `--recon` to list MX/TXT records, O365 tenant info, federation configuration, autodiscover, etc.
+- Domain `--recon` with the following features:
+  - list MX/TXT records
+  - list O365 info
+    - tenant ID
+    - tenant name
+    - other tentant domains
+    - sharepoint URL
+    - authentication urls, autodiscover, federation config, etc.
+  - enumerate valid users via OneDrive without attempting logins (use `--recon` and `--users`)
 
 ## How To - O365
 - First, get a list of emails for `corp.com` and perform a spray to see if the default configuration works. Usually it does.
@@ -59,19 +67,24 @@ trevorspray --recon evilcorp.com
 ...
 ```
 
+## Example: Enumerate users via OneDrive (no failed logins)
+```bash
+trevorspray --recon evilcorp.com -u emails.txt --threads 10
+```
+
 ## Example: Spray against discovered "token_endpoint" URL
 ```bash
-trevorspray -u emails.txt -p 'Fall2021!' --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
+trevorspray -u emails.txt -p 'Welcome123' --url https://login.windows.net/b439d764-cafe-babe-ac05-2e37deadbeef/oauth2/token
 ```
 
 ## Example: Spray with 5-second delay between requests
 ```bash
-trevorspray -u bob@evilcorp.com -p 'Fall2021!' --delay 5
+trevorspray -u bob@evilcorp.com -p 'Welcome123' --delay 5
 ```
 
 ## Example: Spray and round-robin between 3 IPs (the current IP is also used, unless `-n` is specified)
 ```bash
-trevorspray -u emails.txt -p 'Fall2021!' --ssh root@1.2.3.4 root@4.3.2.1
+trevorspray -u emails.txt -p 'Welcome123' --ssh root@1.2.3.4 root@4.3.2.1
 ```
 
 ## Example: Find valid usernames without OSINT >:D
@@ -91,11 +104,11 @@ echo -n $ordered_letters | while read -n1 f; do
   done
 done | tee f.last.txt
 
-trevorspray -u f.last.txt -p 'Fall2021!'
+trevorspray -u f.last.txt -p 'Welcome123'
 ```
 
 ## Extract data from downloaded LZX files
-When TREVORspray successfully bypasses MFA and retrieves an Offline Address Book (OAB), the address book is downloaded in LZX format to `~/.trevorspray/loot`. LZX is an ancient and obnoxious encryption algorithm used by Microsoft.
+When TREVORspray successfully bypasses MFA and retrieves an Offline Address Book (OAB), the address book is downloaded in LZX format to `~/.trevorspray/loot`. LZX is an ancient and obnoxious compression algorithm used by Microsoft.
 ~~~bash
 # get libmspack (for extracting LZX file)
 git clone https://github.com/kyz/libmspack
@@ -205,7 +218,7 @@ class SprayModule(BaseSprayModule):
             TREVOR_otherthing=asdf
         '''
         while not self.runtimeparams.get('otherthing', ''):
-            self.runtimeparams.update({
+            self.trevor.runtimeparams.update({
                 'otherthing': input("What's that other thing? ")
             })
 

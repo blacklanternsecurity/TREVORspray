@@ -85,11 +85,11 @@ class ProxyThread(threading.Thread):
             self.proxy.stop()
 
 
-    def submit(self, user, password):
+    def submit(self, user, password, enumerate_users=False):
 
         with self.lock:
             if self.q is None:
-                self.q = (user, password)
+                self.q = (user, password, enumerate_users)
                 return True
         return False
 
@@ -100,11 +100,16 @@ class ProxyThread(threading.Thread):
 
             try:
 
-                user, password = None, None
+                user, password, enumerate_users = None, None, None
                 with self.lock:
                     if self.q is not None:
-                        user, password = self.q
+                        user, password, enumerate_users = self.q
                         self.q = None
+
+                if enumerate_users:
+                    sprayer = self.trevor.user_enumerator
+                else:
+                    sprayer = self.trevor.sprayer
 
                 login_id = f'{self.trevor.sprayer.id}|{user}|{password}'
 
@@ -114,30 +119,31 @@ class ProxyThread(threading.Thread):
 
                 self._running = True
 
+                password_str = (f':{password}' if password else '')
                 with self.trevor.lock:
                     self.trevor.sprayed_counter += 1
-                    if login_id in self.trevor.tried_logins:
+                    if login_id in self.trevor.tried_logins and not self.trevor.options.force and not enumerate_users:
                         log.info(f'Already tried {user}:{password}, skipping.')
                         self._running = False
                         continue
 
-                valid, exists, locked, msg = self.check_cred(user, password)
+                valid, exists, locked, msg = self.check_cred(user, password, enumerate_users)
 
                 with self.trevor.lock:
                     self.trevor.tried_logins[login_id] = True
 
                     if valid:
                         exists = True
-                        log.success(f'{user}:{password} - {msg}')
+                        log.success(f'{user}{password_str} - {msg}')
                         self.trevor.valid_logins.append(f'{user}:{password}')
                         if self.trevor.options.exit_on_success:
                             self.trevor._stop = True
                     elif locked:
-                        log.error(f'{user}:{password} - {msg}')
+                        log.error(f'{user}{password_str} - {msg}')
                     elif exists:
-                        log.warning(f'{user}:{password} - {msg}')
+                        log.warning(f'{user}{password_str} - {msg}')
                     else:
-                        log.info(f'{user}:{password} - {msg}')
+                        log.info(f'{user}{password_str} - {msg}')
 
                     if exists:
                         self.trevor.existent_users.append(user)
@@ -147,14 +153,14 @@ class ProxyThread(threading.Thread):
 
                     if valid:
                         if not self.trevor.options.no_loot:
-                            self.trevor.sprayer.loot((user, password))
+                            sprayer.loot((user, password))
                         if self.trevor.options.exit_on_success:
                             self._running = False
                             self.q = None
                             return
 
                     # If the force flag isn't set and lockout count is 10 we'll ask if the user is sure they want to keep spraying
-                    if not self.trevor.options.force and self.trevor.lockout_counter == 10 and self.trevor.lockout_question == False:
+                    if not self.trevor.options.ignore_lockouts and self.trevor.lockout_counter == 10 and self.trevor.lockout_question == False:
                         log.error('Multiple Account Lockouts Detected!')
                         log.error('10 of the accounts you sprayed appear to be locked out. Do you want to continue this spray?')
                         yes = {'yes', 'y'}
@@ -169,13 +175,14 @@ class ProxyThread(threading.Thread):
                             log.info('NOTE: If you are seeing multiple "account is locked" messages after your first 10 attempts or so this may indicate Azure AD Smart Lockout is enabled.')
                             return self.cancel_spray()
 
-                print(f'       Sprayed {self.trevor.sprayed_counter:,} / {self.trevor.sprayed_possible:,} accounts\r', end='', flush=True)
+                verb = ('Enumerated' if enumerate_users else 'Sprayed')
+                print(f'       {verb} {self.trevor.sprayed_counter:,} / {self.trevor.sprayed_possible:,} accounts\r', end='', flush=True)
 
                 if locked and self.trevor.options.lockout_delay:
                     log.verbose(f'Lockout encountered, sleeping thread for {self.trevor.options.lockout_delay:.1f} seconds')
                     sleep(self.trevor.options.lockout_delay)
 
-                if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or locked or self.trevor.sprayer.fail_nonexistent):
+                if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or locked or sprayer.fail_nonexistent):
                     delay = float(self.trevor.options.delay)
                     jitter = random.random() * self.trevor.options.jitter
                     delay += jitter
@@ -214,16 +221,21 @@ class ProxyThread(threading.Thread):
         return self._running or self.q is not None
     
 
-    def check_cred(self, user, password):
+    def check_cred(self, user, password, enumerate_users=False):
+
+        if enumerate_users:
+            sprayer = self.trevor.user_enumerator
+        else:
+            sprayer = self.trevor.sprayer
 
         result = None
         while result is None:
             try:
                 session = requests.Session()
                 try:
-                    request = self.trevor.sprayer.create_request(user, password).prepare()
+                    request = sprayer.create_request(user, password).prepare()
                 except Exception as e:
-                    log.error(f'Unhandled error in {self.trevor.sprayer.__class__.__name__}.create_request(): {e}')
+                    log.error(f'Unhandled error in {sprayer.__class__.__name__}.create_request(): {e} (-v to debug)')
                     if log.level <= logging.DEBUG:
                         import traceback
                         log.error(traceback.format_exc())
@@ -236,7 +248,6 @@ class ProxyThread(threading.Thread):
                     current_useragent = request.headers.get('User-Agent', windows_user_agent)
                     request.headers['User-Agent'] = f'{current_useragent} {random.randint(0,99999)}.{random.randint(0,99999)}'
 
-                log.debug(f'Requesting {request.method} {request.url} through proxy: {self.proxy}')
                 kwargs = {
                     'timeout': self.trevor.options.timeout,
                     'allow_redirects': False,
@@ -249,15 +260,16 @@ class ProxyThread(threading.Thread):
                     }
                 if self.proxy is not None:
                     kwargs['proxies'] = self.proxy_arg
+                log.debug(f'{request.method} {request.url} through proxy: {self.proxy}, {kwargs}')
                 response = session.send(
                     request,
                     **kwargs
                 )
-                log.debug(f'Finished requesting {request.url} through proxy: {self.proxy}')
+                log.debug(f'Finished requesting {request.url} through proxy: {self.proxy}. {response}')
                 try:
-                    result = self.trevor.sprayer.check_response(response)
+                    result = sprayer.check_response(response)
                 except Exception as e:
-                    log.error(f'Unhandled error in {self.trevor.sprayer.__class__.__name__}.check_response(): {e}')
+                    log.error(f'Unhandled error in {sprayer.__class__.__name__}.check_response(): {e} (-v to debug)')
                     if log.level <= logging.DEBUG:
                         import traceback
                         log.error(traceback.format_exc())

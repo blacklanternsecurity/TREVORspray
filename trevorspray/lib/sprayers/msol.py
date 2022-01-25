@@ -34,7 +34,7 @@ class MSOL(BaseSprayModule):
         if self.trevor.options.prefer_ipv6 and self.url == self.ipv6_url:
             self.headers['Host'] = 'login.microsoft.com'
 
-        discovery = DomainDiscovery(self.url)
+        discovery = DomainDiscovery(self.trevor, self.url)
         userrealm = discovery.getuserrealm()
         namespace = userrealm.get('NameSpaceType', 'Unknown')
         if namespace == 'Federated':

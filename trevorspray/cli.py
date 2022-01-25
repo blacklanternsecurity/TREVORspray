@@ -21,7 +21,7 @@ sys.path.append(str(package_path))
 
 from lib import logger
 import lib.util as util
-from lib.sprayer import TrevorSpray
+from lib.trevor import TrevorSpray
 from lib.errors import TREVORSprayError
 
 log = logging.getLogger('trevorspray.cli')
@@ -45,7 +45,8 @@ def main():
     parser.add_argument('--url', help='The URL to spray against')
     parser.add_argument('-t', '--threads', type=int, default=1, help='Max number of concurrent requests (default: 1)')
     parser.add_argument('-r', '--recon', metavar='DOMAIN', nargs='+', help='Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.')
-    parser.add_argument('-f', '--force', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
+    parser.add_argument('-f', '--force', action='store_true', help='Try all usernames/passwords even if they\'ve been tried before')
+    parser.add_argument('--ignore-lockouts', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
     parser.add_argument('-ld', '--lockout-delay', type=float, default=0, help='Sleep for this many additional seconds when a lockout is encountered')
     parser.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
@@ -111,7 +112,7 @@ def main():
             if not options.recon:
                 log.error('Please specify --users and --passwords, or --recon')
                 sys.exit(2)
-        else:
+        if options.users:
             options.users = list(util.files_to_list(options.users).keys())
 
         if options.no_current_ip and not options.ssh:
