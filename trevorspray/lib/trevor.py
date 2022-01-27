@@ -34,6 +34,8 @@ class TrevorSpray:
 
         self.home = Path.home() / '.trevorspray'
         self.home.mkdir(exist_ok=True)
+        self.loot_dir = self.home / 'loot'
+        self.loot_dir.mkdir(exist_ok=True)
 
         self.proxies = []
         if options.ssh:

@@ -8,8 +8,7 @@ class Looter:
 
         self.sprayer = sprayer
         self.credential = credential
-        self.loot_dir = self.sprayer.trevor.home / 'loot'
-        self.loot_dir.mkdir(exist_ok=True)
+        self.loot_dir = self.sprayer.trevor.loot_dir
         self.looters = [getattr(self, func) for func in dir(self) if callable(getattr(self, func)) and func.startswith("looter_")]
 
 
