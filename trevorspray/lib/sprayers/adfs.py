@@ -1,6 +1,5 @@
 import logging
 from .base import BaseSprayModule
-from ..discover import DomainDiscovery
 from ..util import is_domain,is_subdomain,is_url
 from urllib.parse import urlparse,parse_qs,urlencode,urlunparse
 
@@ -18,7 +17,7 @@ class ADFS(BaseSprayModule):
 
     def initialize(self):
 
-        discovery = DomainDiscovery(self.trevor, self.url)
+        discovery = self.trevor.discovery(self.url)
         parsed_url = urlparse(self.url)
         userrealm = discovery.getuserrealm()
         namespace = userrealm.get('NameSpaceType', 'Unknown')

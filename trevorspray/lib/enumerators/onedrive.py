@@ -10,22 +10,35 @@ class OneDriveUserEnum(BaseSprayModule):
     method = 'GET'
     # default target URL
     default_url = 'https://{tenantname}-my.sharepoint.com/personal/{username}_{domain}/_layouts/15/onedrive.aspx'
+    # How many times to retry HTTP requests
+    retries = 0
 
     def initialize(self):
 
-        self.globalparams.update({
-            'domain': '_'.join(self.trevor.discovery.domain.split('.'))
-        })
+        # determine domain
+        self.domain = self.trevor.runtimeparams.get('domain', '')
+        if not self.domain:
+            self.domain = str(self.trevor.domain)
+            if not self.domain:
+                log.error('Failed to determine domain. Please set the environment variable: TREVOR_domain=<domain>')
+                return False
+            log.info(f'Using domain "{self.domain}" (export TREVOR_domain=<domain> to override)')
 
-        if self.trevor.discovery and self.trevor.discovery.confirmed_tenantnames:
-            tenantname = self.trevor.discovery.confirmed_tenantnames[0]
-            log.verbose(f'Using first tenantname "{tenantname}" (export TREVOR_tenantname=<tenantname> to override)')
-            self.globalparams.update({
-                'tenantname': tenantname
-            })
-        else:
-            log.error('OneDrive user enumation: failed to determine tenant name')
-            return False
+        # determine tenant name
+        self.discovery = self.trevor.discovery(self.domain)
+        self.tenantname = self.trevor.env.get('tenantname', '')
+        if not self.tenantname:
+            if self.discovery.onedrive_tenantnames():
+                self.tenantname = self.discovery.onedrive_tenantnames()[0]
+                log.info(f'Using tenantname "{self.tenantname}" (export TREVOR_tenantname=<tenantname> to override)')
+            else:
+                log.error('Failed to confirm tenant name via OneDrive. To force, set the environment variable: TREVOR_tenantname=<tenantname>')
+                return False
+
+        self.globalparams.update({
+            'domain': self.domain.replace('.', '_').replace('-', '_'),
+            'tenantname': self.tenantname,
+        })
 
         return True
 

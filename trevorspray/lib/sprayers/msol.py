@@ -3,7 +3,6 @@ import logging
 from contextlib import suppress
 from .base import BaseSprayModule
 from ..looters.msol import MSOLLooter
-from ..discover import DomainDiscovery
 
 log = logging.getLogger('trevorspray.sprayers.msol')
 
@@ -34,7 +33,7 @@ class MSOL(BaseSprayModule):
         if self.trevor.options.prefer_ipv6 and self.url == self.ipv6_url:
             self.headers['Host'] = 'login.microsoft.com'
 
-        discovery = DomainDiscovery(self.trevor, self.url)
+        discovery = self.trevor.discovery(self.url)
         userrealm = discovery.getuserrealm()
         namespace = userrealm.get('NameSpaceType', 'Unknown')
         if namespace == 'Federated':

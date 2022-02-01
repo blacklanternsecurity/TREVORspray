@@ -44,7 +44,7 @@ def main():
     parser.add_argument('-p', '--passwords', nargs='+', default=[], help='Password(s) that will be used to perform the password spray')
     parser.add_argument('--url', help='The URL to spray against')
     parser.add_argument('-t', '--threads', type=int, default=1, help='Max number of concurrent requests (default: 1)')
-    parser.add_argument('-r', '--recon', metavar='DOMAIN', nargs='+', help='Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.')
+    parser.add_argument('-r', '--recon', metavar='DOMAIN', help='Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.')
     parser.add_argument('-f', '--force', action='store_true', help='Try all usernames/passwords even if they\'ve been tried before')
     parser.add_argument('--ignore-lockouts', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
     parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')

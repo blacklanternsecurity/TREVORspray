@@ -6,6 +6,7 @@ import threading
 from . import util
 from pathlib import Path
 from contextlib import suppress
+from tldextract import tldextract
 from .discover import DomainDiscovery
 from .proxy import ProxyThread, SubnetThread
 from lib.sprayers.base import BaseSprayModule
@@ -15,27 +16,26 @@ log = logging.getLogger('trevorspray.sprayer')
 
 class TrevorSpray:
 
+    env_keyword = 'TREVOR_'
+
     def __init__(self, options):
 
         self.options = options
-        # enumerate environment variables
-        self.runtimeparams = {}
-        keyword = 'TREVOR_'
-        for k,v in os.environ.items():
-            if k.startswith(keyword):
-                _k = k.split(keyword)[-1]
-                self.runtimeparams[_k] = v
+        self.runtimeparams = dict(self.env)
 
         self.lockout_counter = 0
         self.lockout_question = False
 
         self.sprayed_counter = 0
-        self.sprayed_possible = len(self.options.users) * len(self.options.passwords)
+        self.sprayed_possible = max(1, len(self.options.users)) * max(1, len(self.options.passwords))
 
         self.home = Path.home() / '.trevorspray'
         self.home.mkdir(exist_ok=True)
         self.loot_dir = self.home / 'loot'
         self.loot_dir.mkdir(exist_ok=True)
+
+        self._discovery = {}
+        self._domain = None
 
         self.proxies = []
         if options.ssh:
@@ -63,7 +63,6 @@ class TrevorSpray:
                 )
             )
 
-        self.discovery = None
         self.user_enumerator = None
 
         spray_modules = importlib.import_module(f'lib.sprayers.{options.module}')
@@ -97,9 +96,8 @@ class TrevorSpray:
             self.start()
 
             if self.options.recon:
-                for domain in self.options.recon:
-                    self.discovery = DomainDiscovery(self, domain)
-                    self.discovery.recon()
+                discovery = self.discovery(self.options.recon)
+                discovery.recon()
 
             if self.options.users:
                 # user enumeration
@@ -180,3 +178,37 @@ class TrevorSpray:
         # write valid logins
         util.update_file(self.valid_logins_file, self.valid_logins)
         log.info(f'{len(self.valid_logins):,} valid user/pass combos written to {self.valid_logins_file}')
+
+
+    def discovery(self, domain):
+
+        domain = tldextract.extract(domain).fqdn
+        if not domain in self._discovery:
+            self._discovery[domain] = DomainDiscovery(self, domain)
+        return self._discovery[domain]
+
+
+    @property
+    def env(self):
+        env = dict()
+        # enumerate environment variables
+        for k,v in os.environ.items():
+            if k.startswith(self.env_keyword):
+                _k = k.split(self.env_keyword)[-1]
+                env[_k] = v
+        return env
+
+
+    @property
+    def domain(self):
+
+        if self._domain is None:
+            if self.options.recon:
+                self._domain = str(self.options.recon)
+            elif self.options.users:
+                for user in self.options.users:
+                    if '@' in user:
+                        self._domain = self.options.users[0].split('@')[-1].lower()
+                        break
+
+        return self._domain

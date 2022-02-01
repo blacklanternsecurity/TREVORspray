@@ -31,6 +31,8 @@ class BaseSprayModule:
     fail_nonexistent = False
     # Module for looting after successful login
     looter = None
+    # How many times to retry HTTP requests
+    retries = 'infinite'
 
     def __init__(self, trevor):
 

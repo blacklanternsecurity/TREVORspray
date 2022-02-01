@@ -2,6 +2,7 @@ import json
 import logging
 import requests
 import tldextract
+from time import sleep
 import subprocess as sp
 from pathlib import Path
 import lxml.etree as etree
@@ -10,12 +11,13 @@ from contextlib import suppress
 from urllib.parse import urlparse
 from pygments.lexers.html import XmlLexer
 from pygments.lexers.data import JsonLexer
+from requests.exceptions import RequestException
 from pygments.formatters import TerminalFormatter
 
-log = logging.getLogger('trevorspray.util')
+log = logging.getLogger('trevorspray.util.misc')
 
 
-windows_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36 Edg/96.0.1054.43'
+windows_user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
 
 
 def highlight_json(j):
@@ -139,8 +141,19 @@ def download_file(url, filename, **kwargs):
 
 def request(*args, **kwargs):
 
+    retries = kwargs.pop('retries', 3)
+    session = kwargs.pop('session', None)
+
+    if len(args) > 1:
+        url = args[1]
+    else:
+        url = kwargs.get('url', '')
+
     if not args and 'method' not in kwargs:
         kwargs['method'] = 'GET'
+
+    if not 'timeout' in kwargs:
+        kwargs['timeout'] = 10
 
     headers = kwargs.get('headers', {})
     if 'User-Agent' not in headers:
@@ -152,7 +165,19 @@ def request(*args, **kwargs):
     if not 'verify' in kwargs:
         kwargs['verify'] = False
 
-    log.debug(f'Web request: {str(args)}, {str(kwargs)}')
-    response = requests.request(*args, **kwargs)
-    log.debug(f'{response} (Length: {len(response.content)})')
-    return response
+    while retries == 'infinite' or retries >= 0:
+        try:
+            log.debug(f'Web request: {str(args)}, {str(kwargs)}')
+            if session is not None:
+                response = session.request(*args, **kwargs)
+            else:
+                response = requests.request(*args, **kwargs)
+            log.debug(f'Web response: {response} (Length: {len(response.content)}) headers: {response.headers}')
+            return response
+        except RequestException as e:
+            log.debug(f'Web error: {e}')
+            if retries != 'infinite':
+                retries -= 1
+            if retries == 'infinite' or retries >= 0:
+                log.warning(f'Error requesting "{url}", retrying...')
+                sleep(2)

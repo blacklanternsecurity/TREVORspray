@@ -222,14 +222,23 @@ class ProxyThread(threading.Thread):
     
 
     def check_cred(self, user, password, enumerate_users=False):
+        '''
+        returns (valid, exists, locked, msg)
+        '''
+
+        valid = False
+        exists = None
+        locked = None
+        msg = ''
 
         if enumerate_users:
             sprayer = self.trevor.user_enumerator
         else:
             sprayer = self.trevor.sprayer
 
-        result = None
-        while result is None:
+        retries = (int(sprayer.retries) if sprayer.retries != 'infinite' else 'infinite')
+        success = False
+        while not success and (retries == 'infinite' or retries >= 0):
             try:
                 session = requests.Session()
                 try:
@@ -265,9 +274,11 @@ class ProxyThread(threading.Thread):
                     request,
                     **kwargs
                 )
+                log.debug(f'{response} (Length: {len(response.content)}), headers: {response.headers}, data: {response.content}')
                 log.debug(f'Finished requesting {request.url} through proxy: {self.proxy}. {response}')
                 try:
-                    result = sprayer.check_response(response)
+                    valid, exists, locked, msg = sprayer.check_response(response)
+                    success = True
                 except Exception as e:
                     log.error(f'Unhandled error in {sprayer.__class__.__name__}.check_response(): {e} (-v to debug)')
                     if log.level <= logging.DEBUG:
@@ -275,8 +286,13 @@ class ProxyThread(threading.Thread):
                         log.error(traceback.format_exc())
 
             except requests.exceptions.RequestException as e:
-                log.error(f'Error in request: {e}')
-                log.error('Retrying...')
+                msg = f'{e}'
+                if retries != 'infinite':
+                    retries -= 1
+                if retries == 'infinite' or retries >= 0:
+                    log.debug(f'Error in request: {e}, retrying...')
+                else:
+                    log.debug(f'Error in request: {e}')
                 # rebuild proxy
                 if self.proxy_arg and not type(self.proxy) == str:
                     try:
@@ -284,4 +300,6 @@ class ProxyThread(threading.Thread):
                     except SSHProxyError as e:
                         log.error(e)
                 sleep(1)
+
+        result = (valid, exists, locked, msg)
         return result
