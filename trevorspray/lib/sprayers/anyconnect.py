@@ -1,5 +1,7 @@
 import logging
 import requests
+from lxml import etree
+from ..util import request
 from contextlib import suppress
 from .base import BaseSprayModule
 
@@ -44,14 +46,13 @@ class AnyConnect(BaseSprayModule):
 
     def initialize(self):
 
-        from lxml import etree
-
         url = self.url + ('/' if not self.url.endswith('/') else '')
 
         s = requests.Session()
-        log.debug(f'POST {url}')
-        initial_response = s.post(
-            url,
+
+        initial_response = request(
+            method='POST',
+            url=url,
             headers=self.headers_xml,
             data=f'''<?xml version="1.0" encoding="UTF-8"?>
 <config-auth client="vpn" type="init">
@@ -60,10 +61,8 @@ class AnyConnect(BaseSprayModule):
   <group-access>{self.url}</group-access>
 </config-auth>''',
             allow_redirects=False,
-            verify=False
+            session=s
         )
-
-        log.debug(f'{initial_response}: {initial_response.content}')
 
         tunnelgroups = {}
         selected_tunnelgroup = None
@@ -80,7 +79,7 @@ class AnyConnect(BaseSprayModule):
                 log.error(f'Error parsing content: {e}, {initial_response.content}')
                 return False
             for tunnelgroup in parsed_initial_response.iterfind('.//opaque'):
-                group = tunnelgroup.find('tunnel-group').text,
+                group = tunnelgroup.find('tunnel-group').text
                 groupname = tunnelgroup.find('group-alias').text
                 if group and groupname:
                     tunnelgroups[groupname] = {
@@ -90,15 +89,18 @@ class AnyConnect(BaseSprayModule):
                     }
 
         # plain auth
-        elif initial_response.status_code in (301, 302):
+        elif initial_response.status_code in (301, 302, 303):
             self.auth_type = 'plain'
             self.headers = self.headers_plain
             host = '/'.join(initial_response.url.split('/', 3)[:3])
-            self.url = host + initial_response.headers['Location']
+            response_location = initial_response.headers['Location']
+            if response_location.lower().startswith('http'):
+                self.url = str(response_location)
+            else:
+                self.url = host + initial_response.headers['Location']
             log.info(f'Detected plain auth, redirecting to {self.url}')
-            log.debug(f'POST {self.url}')
-            plain_response = s.get(
-                self.url,
+            plain_response = request(
+                url=self.url,
                 headers={
                     'User-Agent': 'AnyConnect Windows 4.10.01075',
                     'Accept': '*/*',
@@ -107,7 +109,7 @@ class AnyConnect(BaseSprayModule):
                     'X-Support-HTTP-Auth': 'true',
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                verify=False
+                session=s
             )
             if plain_response.status_code == 200:
                 try:
@@ -157,14 +159,13 @@ class AnyConnect(BaseSprayModule):
 
         if selected_tunnelgroup:
             log.info(f'Using tunnel group "{selected_tunnelgroup["groupname"]}"')
+            self.request_data = self.request_data.replace('{groupxml}', selected_tunnelgroup.pop('groupxml', ''))
             self.globalparams.update(selected_tunnelgroup)
 
         return True
 
 
     def check_response(self, response):
-
-        from lxml import etree
 
         valid = False
         exists = None
