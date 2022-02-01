@@ -188,9 +188,11 @@ Subnet Proxy:
 ```
 
 ## Writing your own Spray Modules
-If you need to spray a service/endpoint that's not supported yet, you can write your own spray modules! This is a great option because custom modules benefit from all of TREVORspray's features -- e.g. proxies, delay, jitter, etc.
+If you need to spray a service/endpoint that's not supported yet, you can write your own spray module! This is a great option because custom modules benefit from all of TREVORspray's features -- e.g. proxies, delay, jitter, etc.
 
-Writing your own spray modules is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/example.py`), and fill out the HTTP method and any other parameters that you need in the requests. You can then use the module by specifying `-m example`. You can call the class whatever you want, but it needs to inherit from `BaseSprayModule`.
+Writing your own spray module is pretty straightforward. Create a new `.py` file in `lib/sprayers` (e.g. `lib/sprayers/custom_sprayer.py`), and create a class that inherits from `BaseSprayModule`. You can call the class whatever you want. Fill out the HTTP method and any other parameters that you need in the requests (you can reference `lib/sprayers/base.py` or any of the other modules for examples).
+  - You only need to implement one method on your custom class: `check_response()`. This method evaluates the HTTP response to determine whether the login was successful.
+  - Once you're finished, you can use the custom spray module by specifying the name of your python file (without the `.py`) on the command line, e.g. `trevorspray -m custom_sprayer -u users.txt -p Welcome123`.
 ~~~python
 # Example spray module
 
@@ -221,7 +223,7 @@ class SprayModule(BaseSprayModule):
         NOTE: These can also be passed via environment variables beginning with "TREVOR_":
             TREVOR_otherthing=asdf
         '''
-        while not self.runtimeparams.get('otherthing', ''):
+        while not self.trevor.runtimeparams.get('otherthing', ''):
             self.trevor.runtimeparams.update({
                 'otherthing': input("What's that other thing? ")
             })
