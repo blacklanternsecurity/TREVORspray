@@ -33,11 +33,11 @@ class MSOL(BaseSprayModule):
         if self.trevor.options.prefer_ipv6 and self.url == self.ipv6_url:
             self.headers['Host'] = 'login.microsoft.com'
 
-        discovery = self.trevor.discovery(self.url)
+        discovery = self.trevor.discovery(self.trevor.domain)
         userrealm = discovery.getuserrealm()
         namespace = userrealm.get('NameSpaceType', 'Unknown')
         if namespace == 'Federated':
-            log.warning(f'NameSpaceType for {self.url} is "{namespace}", not "Managed". You may want to try the "adfs" module instead.')
+            log.warning(f'NameSpaceType for {self.trevor.domain} is "{namespace}", not "Managed". You may want to try the "adfs" module instead.')
 
         return True
 

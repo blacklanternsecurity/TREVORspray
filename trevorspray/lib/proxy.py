@@ -4,8 +4,8 @@ import requests
 import threading
 from time import sleep
 from contextlib import suppress
-from .util import windows_user_agent
 from trevorproxy.lib.ssh import SSHProxy
+from .util import windows_user_agent, request
 from trevorproxy.lib.errors import SSHProxyError
 
 log = logging.getLogger('trevorspray.proxy')
@@ -168,7 +168,7 @@ class ProxyThread(threading.Thread):
                         self.trevor.lockout_question = True
                         choice = 'X'
                         while (choice not in no and choice not in yes):
-                            choice = input('[USER] [Y/N] (default is N): ').lower()
+                            choice = input('\n[USER] [Y/N] (default is N): ').lower()
 
                         if choice in no:
                             log.info('Cancelling the password spray.')
@@ -242,7 +242,7 @@ class ProxyThread(threading.Thread):
             try:
                 session = requests.Session()
                 try:
-                    request = sprayer.create_request(user, password).prepare()
+                    prepared_request = sprayer.create_request(user, password).prepare()
                 except Exception as e:
                     log.error(f'Unhandled error in {sprayer.__class__.__name__}.create_request(): {e} (-v to debug)')
                     if log.level <= logging.DEBUG:
@@ -254,8 +254,8 @@ class ProxyThread(threading.Thread):
 
                 # randomize user-agent if requested
                 if self.trevor.options.random_useragent:
-                    current_useragent = request.headers.get('User-Agent', windows_user_agent)
-                    request.headers['User-Agent'] = f'{current_useragent} {random.randint(0,99999)}.{random.randint(0,99999)}'
+                    current_useragent = prepared_request.headers.get('User-Agent', windows_user_agent)
+                    prepared_request.headers['User-Agent'] = f'{current_useragent} {random.randint(0,99999)}.{random.randint(0,99999)}'
 
                 kwargs = {
                     'timeout': self.trevor.options.timeout,
@@ -269,13 +269,12 @@ class ProxyThread(threading.Thread):
                     }
                 if self.proxy is not None:
                     kwargs['proxies'] = self.proxy_arg
-                log.debug(f'{request.method} {request.url} through proxy: {self.proxy}, {kwargs}')
-                response = session.send(
-                    request,
+                log.debug(f'HTTP {request.method} through proxy: {self.proxy}')
+                response = request(
+                    prepared_request,
+                    session=session,
                     **kwargs
                 )
-                log.debug(f'{response} (Length: {len(response.content)}), headers: {response.headers}, data: {response.content}')
-                log.debug(f'Finished requesting {request.url} through proxy: {self.proxy}. {response}')
                 try:
                     valid, exists, locked, msg = sprayer.check_response(response)
                     success = True

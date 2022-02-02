@@ -14,7 +14,10 @@ class Okta(BaseSprayModule):
         'options': {
             'warnBeforePasswordExpired': True,
             'multiOptionalFactorEnroll': True
-        }
+        },
+        'subdomain': '{subdomain}',
+        'username': '{username}',
+        'password': '{password}'
     }
 
     headers = {
@@ -31,7 +34,7 @@ class Okta(BaseSprayModule):
 
         while not self.trevor.runtimeparams.get('subdomain', ''):
             self.trevor.runtimeparams.update({
-                'subdomain': input('Enter target subdomain (<subdomain>.okta.com): ').strip()
+                'subdomain': input('\n[USER] Enter target subdomain (<subdomain>.okta.com): ').strip()
             })
 
         return True

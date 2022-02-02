@@ -144,32 +144,52 @@ def request(*args, **kwargs):
     retries = kwargs.pop('retries', 3)
     session = kwargs.pop('session', None)
 
+    prepared = False
     if len(args) > 1:
         url = args[1]
+    elif len(args) == 1:
+        url = args[0]
+        if type(url) == requests.models.PreparedRequest:
+            prepared = url
+            url = str(url.url)
     else:
         url = kwargs.get('url', '')
 
-    if not args and 'method' not in kwargs:
+    if not prepared and not args and 'method' not in kwargs:
         kwargs['method'] = 'GET'
 
     if not 'timeout' in kwargs:
         kwargs['timeout'] = 10
 
-    headers = kwargs.get('headers', {})
+    if prepared:
+        headers = prepared.headers
+    else:
+        headers = kwargs.get('headers', {})
+
     if 'User-Agent' not in headers:
         headers.update({
             'User-Agent': windows_user_agent
         })
-    kwargs['headers'] = headers
+    if prepared:
+        prepared.headers = headers
+    else:
+        kwargs['headers'] = headers
 
     if not 'verify' in kwargs:
         kwargs['verify'] = False
 
     while retries == 'infinite' or retries >= 0:
         try:
-            log.debug(f'Web request: {str(args)}, {str(kwargs)}')
+            if prepared:
+                logstr = f'Web Request: {prepared.method} {prepared.url} {prepared.headers}, {str(kwargs)}'
+            else:
+                logstr = f'Web request: {str(args)}, {str(kwargs)}'
+            log.debug(logstr)
             if session is not None:
-                response = session.request(*args, **kwargs)
+                if prepared:
+                    response = session.send(*args, **kwargs)
+                else:
+                    response = session.request(*args, **kwargs)
             else:
                 response = requests.request(*args, **kwargs)
             log.debug(f'Web response: {response} (Length: {len(response.content)}) headers: {response.headers}')

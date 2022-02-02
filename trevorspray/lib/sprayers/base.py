@@ -36,16 +36,20 @@ class BaseSprayModule:
 
     def __init__(self, trevor):
 
+        log.debug(f'Initializing sprayer')
+
+        self.url = None
         self.trevor = trevor
         if self.trevor.options.url is not None:
             self.url = str(self.trevor.options.url)
         elif self.default_url is not None:
             self.url = str(self.default_url)
-        else:
-            raise TREVORSprayError('Please specify a --url to spray against')
 
         if self.ipv6_url and self.url == self.default_url and self.trevor.options.prefer_ipv6:
             self.url = self.ipv6_url
+
+        if not self.url:
+            raise TREVORSprayError('Please specify a --url to spray against')
 
         # make sure we have a user-agent
         if not self.headers.get('User-Agent', ''):
@@ -89,7 +93,7 @@ class BaseSprayModule:
         json = None
         if type(self.request_json) == dict:
             json = dict(self.request_json)
-            json.update(params)
+            json.update({k:v for k,v in params.items() if k in json})
 
         return requests.Request(
             method=self.method,

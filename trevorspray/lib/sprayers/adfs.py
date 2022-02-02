@@ -1,4 +1,5 @@
 import logging
+from bs4 import BeautifulSoup
 from .base import BaseSprayModule
 from ..util import is_domain,is_subdomain,is_url
 from urllib.parse import urlparse,parse_qs,urlencode,urlunparse
@@ -70,10 +71,22 @@ class ADFS(BaseSprayModule):
         msg = ''
 
         status_code = getattr(response, 'status_code', 0)
+        cookies = getattr(response, 'cookies', {})
+        content = getattr(response, 'content', b'')
+        msg = f'Status code: {status_code}, Response length: {len(content)}' + \
+            (f', Cookies: {dict(cookies)}' if cookies else '')
+
+        error_msg = ''
+        if content:
+            soup = BeautifulSoup(content, 'html.parser')
+            found = soup.find(id='errorText')
+            error_msg = getattr(found, 'text', '')
+
+        if error_msg:
+            msg = f'{msg} {error_msg}'
 
         if status_code == 302:
             exists = True
             valid = True
-        msg = f'Status code: {status_code}, Response length: {len(response.content)}' + (f', Cookies: {dict(response.cookies)}' if response.cookies else '')
 
         return (valid, exists, locked, msg)

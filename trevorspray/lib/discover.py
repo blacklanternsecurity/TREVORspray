@@ -5,10 +5,10 @@ import logging
 import requests
 import dns.resolver
 from .util import *
+from . import enumerators
 import concurrent.futures
 from contextlib import suppress
 from urllib.parse import urlparse,urlunparse
-from .enumerators.onedrive import OneDriveUserEnum
 
 log = logging.getLogger('trevorspray.discovery')
 
@@ -64,7 +64,15 @@ class DomainDiscovery:
         self.onedrive_tenantnames()
 
         if self.trevor.options.users:
-            self.trevor.user_enumerator = OneDriveUserEnum(trevor=self.trevor)
+            choices = list(enumerators.module_choices.keys())
+            while not self.trevor.runtimeparams.get('userenum_module', ''):
+                log.info(f'Preparing to enumerate users (automate by exporting TREVOR_userenum_method={"|".join(choices)})')
+                choice = input(f'\n[USER] Which user enumeration method would you like to use? ({"|".join(choices)}) ')
+                if choice not in choices:
+                    log.error(f'Invalid selection, "{choice}"')
+                    continue
+                self.trevor.runtimeparams.update({'userenum_module': str(choice)})
+                self.trevor.user_enumerator = enumerators.module_choices[choice](trevor=self.trevor)
 
 
     @staticmethod
@@ -210,10 +218,10 @@ class DomainDiscovery:
 
         if self._onedrive_tenantnames is None:
 
+            self.msoldomains()
+
             if not self.tenantnames:
                 return []
-
-            self.msoldomains()
 
             self._onedrive_tenantnames = []
 

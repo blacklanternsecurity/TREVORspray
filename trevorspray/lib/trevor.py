@@ -4,12 +4,12 @@ import logging
 import importlib
 import threading
 from . import util
+from . import sprayers
 from pathlib import Path
 from contextlib import suppress
 from tldextract import tldextract
 from .discover import DomainDiscovery
 from .proxy import ProxyThread, SubnetThread
-from lib.sprayers.base import BaseSprayModule
 
 log = logging.getLogger('trevorspray.sprayer')
 
@@ -65,15 +65,9 @@ class TrevorSpray:
 
         self.user_enumerator = None
 
-        spray_modules = importlib.import_module(f'lib.sprayers.{options.module}')
-        for m in spray_modules.__dict__.keys():
-            spray_module = getattr(spray_modules, m)
-            try:
-                if BaseSprayModule in spray_module.__bases__:
-                    self.sprayer = spray_module(trevor=self)
-                    break
-            except AttributeError:
-                continue
+        sprayer_class = sprayers.module_choices.get(options.module, None)
+        if sprayer_class is not None:
+            self.sprayer = sprayer_class(trevor=self)
 
         self.existent_users_file = str(self.home / 'existent_users.txt')
         self.valid_logins_file = str(self.home / 'valid_logins.txt')
@@ -82,7 +76,7 @@ class TrevorSpray:
         self.valid_logins = []
         self.tried_logins = util.read_file(
             self.tried_logins_file,
-            key=lambda x: x.startswith(self.sprayer.id)
+            key=lambda x: x.startswith(f'{self.sprayer.id}')
         )
 
         self.lock = threading.Lock()

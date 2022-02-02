@@ -21,6 +21,7 @@ sys.path.append(str(package_path))
 
 from lib import logger
 import lib.util as util
+from lib import sprayers
 from lib.trevor import TrevorSpray
 from lib.errors import TREVORSprayError
 
@@ -29,45 +30,40 @@ log = logging.getLogger('trevorspray.cli')
 
 def main():
 
-    module_dir = Path(__file__).parent / 'lib/sprayers'
-    module_files = list(os.listdir(module_dir))
-    module_choices = []
-    for file in module_files:
-        file = module_dir / file
-        if file.is_file() and file.suffix.lower() == '.py' and not file.stem == 'base':
-            module_choices.append(file.stem)
-
     parser = argparse.ArgumentParser(description='A password sprayer with the option to load-balance traffic through SSH hosts')
 
-    parser.add_argument('-m', '--module', choices=module_choices, default='msol', help='Spray module to use (default: msol)')
-    parser.add_argument('-u', '--users', nargs='+', default=[], help='Usernames(s) and/or file(s) containing usernames')
-    parser.add_argument('-p', '--passwords', nargs='+', default=[], help='Password(s) that will be used to perform the password spray')
-    parser.add_argument('--url', help='The URL to spray against')
-    parser.add_argument('-t', '--threads', type=int, default=1, help='Max number of concurrent requests (default: 1)')
-    parser.add_argument('-r', '--recon', metavar='DOMAIN', help='Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.')
-    parser.add_argument('-f', '--force', action='store_true', help='Try all usernames/passwords even if they\'ve been tried before')
-    parser.add_argument('--ignore-lockouts', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
-    parser.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
-    parser.add_argument('-ld', '--lockout-delay', type=float, default=0, help='Sleep for this many additional seconds when a lockout is encountered')
-    parser.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
-    parser.add_argument('-e', '--exit-on-success', action='store_true', help='Stop spray when a valid cred is found')
-    parser.add_argument('-nl', '--no-loot', action='store_true', help='Don\'t execute loot activites for valid accounts')
-    parser.add_argument('--timeout', type=float, default=10, help='Connection timeout in seconds (default: 10)')
-    parser.add_argument('--random-useragent', action='store_true', help='Add a random value to the User-Agent for each request')
-    parser.add_argument('-6', '--prefer-ipv6', action='store_true', help='Prefer IPv6 over IPv4')
-    parser.add_argument('--proxy', help='Proxy to use for HTTP and HTTPS requests')
-    parser.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
+    basic_group = parser.add_argument_group(title='basic arguments')
+    basic_group.add_argument('-m', '--module', choices=sprayers.module_choices, default='msol', help='Spray module to use (default: msol)')
+    basic_group.add_argument('-u', '--users', nargs='+', default=[], help='Usernames(s) and/or file(s) containing usernames')
+    basic_group.add_argument('-p', '--passwords', nargs='+', default=[], help='Password(s) that will be used to perform the password spray')
+    basic_group.add_argument('--url', help='The URL to spray against')
+    basic_group.add_argument('-r', '--recon', metavar='DOMAIN', help='Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.')
 
-    ssh_parser = parser.add_argument_group(title='SSH Proxy', description='Round-robin traffic through remote systems via SSH (overrides --threads)')
-    ssh_parser.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
-    ssh_parser.add_argument('-i', '-k', '--key', help='Use this SSH key when connecting to proxy hosts')
-    ssh_parser.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
-    ssh_parser.add_argument('-b', '--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
-    ssh_parser.add_argument('-n', '--no-current-ip', action='store_true', help='Don\'t spray from the current IP, only use SSH proxies')
+    advanced_group = parser.add_argument_group(title='advanced arguments', description='Round-robin traffic through remote systems via SSH (overrides --threads)')
+    advanced_group.add_argument('-t', '--threads', type=int, default=1, help='Max number of concurrent requests (default: 1)')
+    advanced_group.add_argument('-f', '--force', action='store_true', help='Try all usernames/passwords even if they\'ve been tried before')
+    advanced_group.add_argument('--ignore-lockouts', action='store_true', help='Forces the spray to continue and not stop when multiple account lockouts are detected')
+    advanced_group.add_argument('-d', '--delay', type=float, default=0, help='Sleep for this many seconds between requests')
+    advanced_group.add_argument('-ld', '--lockout-delay', type=float, default=0, help='Sleep for this many additional seconds when a lockout is encountered')
+    advanced_group.add_argument('-j', '--jitter', type=float, default=0, help='Add a random delay of up to this many seconds between requests')
+    advanced_group.add_argument('-e', '--exit-on-success', action='store_true', help='Stop spray when a valid cred is found')
+    advanced_group.add_argument('-nl', '--no-loot', action='store_true', help='Don\'t execute loot activites for valid accounts')
+    advanced_group.add_argument('--timeout', type=float, default=10, help='Connection timeout in seconds (default: 10)')
+    advanced_group.add_argument('--random-useragent', action='store_true', help='Add a random value to the User-Agent for each request')
+    advanced_group.add_argument('-6', '--prefer-ipv6', action='store_true', help='Prefer IPv6 over IPv4')
+    advanced_group.add_argument('--proxy', help='Proxy to use for HTTP and HTTPS requests')
+    advanced_group.add_argument('-v', '--verbose', '--debug', action='store_true', help='Show which proxy is being used for each request')
 
-    subnet_parser = parser.add_argument_group(title='Subnet Proxy', description='Send traffic from random addresses within IP subnet')
-    subnet_parser.add_argument('--interface', help='Interface to send packets on')
-    subnet_parser.add_argument('--subnet', help='Subnet to send packets from')
+    ssh_group = parser.add_argument_group(title='SSH Proxy', description='Round-robin traffic through remote systems via SSH (overrides --threads)')
+    ssh_group.add_argument('-s', '--ssh', default=[], metavar='USER@SERVER', nargs='+', help='Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round')
+    ssh_group.add_argument('-i', '-k', '--key', help='Use this SSH key when connecting to proxy hosts')
+    ssh_group.add_argument('-kp', '--key-pass', action='store_true', help=argparse.SUPPRESS)
+    ssh_group.add_argument('-b', '--base-port', default=33482, type=int, help='Base listening port to use for SOCKS proxies')
+    ssh_group.add_argument('-n', '--no-current-ip', action='store_true', help='Don\'t spray from the current IP, only use SSH proxies')
+
+    subnet_group = parser.add_argument_group(title='Subnet Proxy', description='Send traffic from random addresses within IP subnet')
+    subnet_group.add_argument('--interface', help='Interface to send packets on')
+    subnet_group.add_argument('--subnet', help='Subnet to send packets from')
 
     try:
 
