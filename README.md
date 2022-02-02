@@ -50,7 +50,9 @@ See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool d
     - other tentant domains
     - sharepoint URL
     - authentication urls, autodiscover, federation config, etc.
-  - enumerate valid users via OneDrive without attempting logins (use `--recon` and `--users`)
+  - User enumeration (use `--recon` and `--users`):
+    - `OneDrive`
+    - `Azure Seamless SSO`
 
 ## How To - O365
 - First, get a list of emails for `corp.com` and perform a spray to see if the default configuration works. Usually it does.
