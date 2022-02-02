@@ -130,27 +130,32 @@ egrep -oa '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}' oab.bin | tr '[:uppe
 ## TREVORspray - Help:
 ```
 $ trevorspray --help
-usage: trevorspray [-h] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-t THREADS]
-                   [-r DOMAIN [DOMAIN ...]] [-f] [-d DELAY] [-ld LOCKOUT_DELAY] [-j JITTER] [-e] [-nl] [--timeout TIMEOUT]
-                   [--random-useragent] [-m {okta,anyconnect,adfs,msol}] [-6] [--proxy PROXY] [-v]
-                   [-s USER@SERVER [USER@SERVER ...]] [-i KEY] [-b BASE_PORT] [-n] [--interface INTERFACE] [--subnet SUBNET]
+usage: trevorspray [-h] [-m {owa,okta,anyconnect,adfs,msol}] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-r DOMAIN] [-t THREADS] [-f] [-d DELAY]
+                   [-ld LOCKOUT_DELAY] [-j JITTER] [-e] [-nl] [--ignore-lockouts] [--timeout TIMEOUT] [--random-useragent] [-6] [--proxy PROXY] [-v] [-s USER@SERVER [USER@SERVER ...]]
+                   [-i KEY] [-b BASE_PORT] [-n] [--interface INTERFACE] [--subnet SUBNET]
 
 A password sprayer with the option to load-balance traffic through SSH hosts
 
 optional arguments:
   -h, --help            show this help message and exit
-  -m {okta,anyconnect,adfs,msol}, --module {okta,anyconnect,adfs,msol}
+
+basic arguments:
+  -m {owa,okta,anyconnect,adfs,msol}, --module {owa,okta,anyconnect,adfs,msol}
                         Spray module to use (default: msol)
   -u USERS [USERS ...], --users USERS [USERS ...]
                         Usernames(s) and/or file(s) containing usernames
   -p PASSWORDS [PASSWORDS ...], --passwords PASSWORDS [PASSWORDS ...]
                         Password(s) that will be used to perform the password spray
   --url URL             The URL to spray against
+  -r DOMAIN, --recon DOMAIN, --enumerate DOMAIN
+                        Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc. If --usernames are specified, this also enables username enumeration.
+
+advanced arguments:
+  Round-robin traffic through remote systems via SSH (overrides --threads)
+
   -t THREADS, --threads THREADS
                         Max number of concurrent requests (default: 1)
-  -r DOMAIN [DOMAIN ...], --recon DOMAIN [DOMAIN ...]
-                        Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc.
-  -f, --force           Forces the spray to continue and not stop when multiple account lockouts are detected
+  -f, --force           Try all usernames/passwords even if they've been tried before
   -d DELAY, --delay DELAY
                         Sleep for this many seconds between requests
   -ld LOCKOUT_DELAY, --lockout-delay LOCKOUT_DELAY
@@ -160,6 +165,7 @@ optional arguments:
   -e, --exit-on-success
                         Stop spray when a valid cred is found
   -nl, --no-loot        Don't execute loot activites for valid accounts
+  --ignore-lockouts     Forces the spray to continue and not stop when multiple account lockouts are detected
   --timeout TIMEOUT     Connection timeout in seconds (default: 10)
   --random-useragent    Add a random value to the User-Agent for each request
   -6, --prefer-ipv6     Prefer IPv6 over IPv4
@@ -171,8 +177,7 @@ SSH Proxy:
   Round-robin traffic through remote systems via SSH (overrides --threads)
 
   -s USER@SERVER [USER@SERVER ...], --ssh USER@SERVER [USER@SERVER ...]
-                        Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used
-                        once per round
+                        Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
   -i KEY, -k KEY, --key KEY
                         Use this SSH key when connecting to proxy hosts
   -b BASE_PORT, --base-port BASE_PORT

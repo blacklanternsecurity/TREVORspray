@@ -6,6 +6,7 @@ import threading
 from . import util
 from . import sprayers
 from pathlib import Path
+from . import enumerators
 from contextlib import suppress
 from tldextract import tldextract
 from .discover import DomainDiscovery
@@ -63,7 +64,22 @@ class TrevorSpray:
                 )
             )
 
+        self.user_enum = False
         self.user_enumerator = None
+        if self.options.users and self.options.recon:
+            log.info(f'User enumeration enabled with --recon and --users')
+            self.user_enum = True
+            choices = list(enumerators.module_choices.keys())
+            choice = self.runtimeparams.get('userenum_method', '')
+            while not choice:
+                log.info(f'Choosing user enumeration method (skip by exporting TREVOR_userenum_method={"|".join(choices)})')
+                choice = input(f'\n[USER] Which user enumeration method would you like to use? ({"|".join(choices)}) ')
+                if choice not in choices:
+                    log.error(f'Invalid selection, "{choice}"')
+                    choice = ''
+                    continue
+            self.runtimeparams.update({'userenum_method': str(choice)})
+            self.user_enumerator = enumerators.module_choices[choice](trevor=self)
 
         sprayer_class = sprayers.module_choices.get(options.module, None)
         if sprayer_class is not None:

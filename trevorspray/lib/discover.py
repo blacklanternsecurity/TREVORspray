@@ -5,7 +5,6 @@ import logging
 import requests
 import dns.resolver
 from .util import *
-from . import enumerators
 import concurrent.futures
 from contextlib import suppress
 from urllib.parse import urlparse,urlunparse
@@ -62,17 +61,6 @@ class DomainDiscovery:
             update_file(loot_file, msoldomains)
             log.info(f'Wrote {len(msoldomains):,} domains to {loot_file}')
         self.onedrive_tenantnames()
-
-        if self.trevor.options.users:
-            choices = list(enumerators.module_choices.keys())
-            while not self.trevor.runtimeparams.get('userenum_module', ''):
-                log.info(f'Preparing to enumerate users (automate by exporting TREVOR_userenum_method={"|".join(choices)})')
-                choice = input(f'\n[USER] Which user enumeration method would you like to use? ({"|".join(choices)}) ')
-                if choice not in choices:
-                    log.error(f'Invalid selection, "{choice}"')
-                    continue
-                self.trevor.runtimeparams.update({'userenum_module': str(choice)})
-                self.trevor.user_enumerator = enumerators.module_choices[choice](trevor=self.trevor)
 
 
     @staticmethod

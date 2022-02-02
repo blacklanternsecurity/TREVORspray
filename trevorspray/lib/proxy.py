@@ -269,7 +269,7 @@ class ProxyThread(threading.Thread):
                     }
                 if self.proxy is not None:
                     kwargs['proxies'] = self.proxy_arg
-                log.debug(f'HTTP {request.method} through proxy: {self.proxy}')
+                log.debug(f'HTTP {prepared_request.method} through proxy: {self.proxy}')
                 response = request(
                     prepared_request,
                     session=session,
