@@ -211,8 +211,10 @@ class ProxyThread(threading.Thread):
     def cancel_spray(self):
 
         self.trevor._stop = True
-        self._running = False
-        self.q = None
+        for proxy in self.trevor.proxies:
+            with suppress(Exception):
+                proxy._running = False
+                proxy.q = None
 
 
     @property
