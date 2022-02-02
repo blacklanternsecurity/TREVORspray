@@ -7,6 +7,7 @@ import sys
 import logging
 import argparse
 import requests
+import ipaddress
 from shutil import which
 from pathlib import Path
 from getpass import getpass
@@ -62,8 +63,8 @@ def main():
     ssh_group.add_argument('-n', '--no-current-ip', action='store_true', help='Don\'t spray from the current IP, only use SSH proxies')
 
     subnet_group = parser.add_argument_group(title='Subnet Proxy', description='Send traffic from random addresses within IP subnet')
-    subnet_group.add_argument('--interface', help='Interface to send packets on')
     subnet_group.add_argument('--subnet', help='Subnet to send packets from')
+    subnet_group.add_argument('--interface', help='Interface to send packets on')
 
     try:
 
@@ -77,6 +78,12 @@ def main():
         if options.proxy and options.ssh:
             log.error('Cannot specify --proxy with --ssh because the SSH hosts are already used as proxies')
             sys.exit(1)
+
+        if options.subnet:
+            network = ipaddress.ip_network(options.subnet, strict=False)
+            if network.version == 6:
+                log.info('IPv6 subnet specified, assuming --prefer-ipv6')
+                options.prefer_ipv6 = True
 
         # Monkey patch to prioritize IPv4 or IPv6
         import socket
@@ -97,12 +104,14 @@ def main():
             os.environ['HTTP_PROXY'] = options.proxy
             os.environ['HTTPS_PROXY'] = options.proxy
 
+        trevorproxy_logger = logging.getLogger('trevorproxy')
+        trevorspray_logger = logging.getLogger('trevorspray')
         if options.verbose:
-            trevorproxy_logger = logging.getLogger('trevorproxy')
             trevorproxy_logger.setLevel(logging.DEBUG)
-            trevorspray_logger = logging.getLogger('trevorspray')
             trevorspray_logger.setLevel(logging.DEBUG)
-            trevorproxy_logger.handlers = trevorspray_logger.handlers
+        else:
+            trevorproxy_logger.setLevel(logging.INFO)
+        trevorproxy_logger.handlers = trevorspray_logger.handlers
 
         if not (options.users and options.passwords):
             if not options.recon:
