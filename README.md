@@ -21,6 +21,7 @@ See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool d
 - Multiple modules
   - `msol` (Office 365)
   - `adfs` (Active Directory Federation Services)
+  - `owa` (Outlook Web App)
   - `okta` (Okta SSO)
   - `anyconnect` (Cisco VPN)
   - custom modules (easy to make!)
@@ -263,6 +264,7 @@ CREDIT WHERE CREDIT IS DUE - MANY THANKS TO:
 - [@CarsonSallis](https://github.com/CarsonSallis) for the O365 MFA bypasses
 - [@DrAzureAD](https://twitter.com/DrAzureAD) for the Azure AD recon features ([AADInternals](https://github.com/Gerenios/AADInternals))
 - [@nyxgeek](https://twitter.com/nyxgeek) for the OneDrive user enumeration ([onedrive_user_enum](https://github.com/nyxgeek/onedrive_user_enum))
+- [@gremwell](https://twitter.com/gremwell) for the Seamless SSO user enumeration ([o365enum](https://github.com/gremwell/o365enum))
 
 ![trevor](https://user-images.githubusercontent.com/20261699/92336575-27071380-f070-11ea-8dd4-5ba42c7d04b7.jpeg)
 
