@@ -37,6 +37,8 @@ class Okta(BaseSprayModule):
                 'subdomain': input('\n[USER] Enter target subdomain (<subdomain>.okta.com): ').strip()
             })
 
+        self.url = self.url.format(**self.trevor.runtimeparams)
+
         return True
 
     def check_response(self, response):
