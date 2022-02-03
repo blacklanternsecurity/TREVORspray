@@ -221,7 +221,7 @@ class ProxyThread(threading.Thread):
     def running(self):
 
         return self._running or self.q is not None
-    
+
 
     def check_cred(self, user, password, enumerate_users=False):
         '''

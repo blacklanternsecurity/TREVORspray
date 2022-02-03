@@ -37,6 +37,8 @@ class Okta(BaseSprayModule):
                 'subdomain': input('\n[USER] Enter target subdomain (<subdomain>.okta.com): ').strip()
             })
 
+        self.url = self.url.format(**self.trevor.runtimeparams)
+
         return True
 
     def check_response(self, response):
@@ -51,9 +53,10 @@ class Okta(BaseSprayModule):
             json = response.json()
 
         status = json.get('status', json.get('errorSummary', 'Unknown'))
-        msg = f'[{status}] (Response code {response.status_code})'
+        status_code = getattr(response, 'status_code', 0)
+        msg = f'[{status}] (Response code {status_code})'
 
-        if status == 200 and 'status' in json:
+        if status_code == 200 and 'status' in json:
             if status == 'LOCKED_OUT':
                 locked = True
             else:

@@ -13,7 +13,9 @@ class ADFS(BaseSprayModule):
 
     request_data = {
         'Kmsi': 'true',
-        'AuthMethod': 'FormsAuthentication'
+        'AuthMethod': 'FormsAuthentication',
+        'UserName': '{username}',
+        'Password': '{password}'
     }
 
     def initialize(self):
