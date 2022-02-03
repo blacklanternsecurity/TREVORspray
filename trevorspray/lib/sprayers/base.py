@@ -1,5 +1,6 @@
 import logging
 import requests
+from time import sleep
 from urllib.parse import quote
 from ..util import windows_user_agent
 from ..errors import TREVORSprayError
@@ -75,20 +76,31 @@ class BaseSprayModule:
 
         runtimeparams = self.create_params(username, password)
 
-        url = self.url.format(**self.globalparams, **runtimeparams)
-        if not url.lower().startswith('http'):
-            url = f'https://{url}'
-
         data = None
         params = dict(self.globalparams)
         params.update(runtimeparams)
         params.update(self.trevor.runtimeparams)
+
+        try:
+            url = self.url.format(**params)
+        except Exception as e:
+            log.error(f'Error preparing URL "{self.url}" with the following parameters: {params}: {e} (-v to debug)')
+            if log.level <= logging.DEBUG:
+                import traceback
+                log.error(traceback.format_exc())
+            url = str(self.url)
+            log.error(f'Continuing with URL "{url}". If this doesn\'t look right, press CTRL+C to cancel.')
+            sleep(4)
+
+        if not url.lower().startswith('http'):
+            url = f'https://{url}'
+
         if type(self.request_data) == dict:
             data = dict(self.request_data)
-            data.update(params)
+            data.update({k:v for k,v in params.items() if k in data})
         elif type(self.request_data) == str:
-            params = {k: quote(v) for k,v in params.items()}
-            data = self.request_data.format(**params)
+            escaped_params = {k: quote(v) for k,v in params.items()}
+            data = self.request_data.format(**escaped_params)
 
         json = None
         if type(self.request_json) == dict:

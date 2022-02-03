@@ -4,6 +4,7 @@ from lxml import etree
 from ..util import request
 from contextlib import suppress
 from .base import BaseSprayModule
+from urllib.parse import urlparse,urlunparse
 
 log = logging.getLogger('trevorspray.sprayers.anyconnect')
 
@@ -46,7 +47,7 @@ class AnyConnect(BaseSprayModule):
 
     def initialize(self):
 
-        url = self.url + ('/' if not self.url.endswith('/') else '')
+        url = urlunparse(urlparse(self.url)._replace(query='', path='/'))
 
         s = requests.Session()
 

@@ -51,9 +51,10 @@ class Okta(BaseSprayModule):
             json = response.json()
 
         status = json.get('status', json.get('errorSummary', 'Unknown'))
-        msg = f'[{status}] (Response code {response.status_code})'
+        status_code = getattr(response, 'status_code', 0)
+        msg = f'[{status}] (Response code {status_code})'
 
-        if status == 200 and 'status' in json:
+        if status_code == 200 and 'status' in json:
             if status == 'LOCKED_OUT':
                 locked = True
             else:

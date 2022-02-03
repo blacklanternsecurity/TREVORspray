@@ -18,6 +18,8 @@ class MSOL(BaseSprayModule):
         'client_info': '1',
         'grant_type': 'password',
         'scope': 'openid',
+        'username': '{username}',
+        'password': '{password}'
     }
 
     headers = {
