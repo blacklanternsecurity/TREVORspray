@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trevorspray"
-version = "2.0.3"
+version = "2.0.4"
 description = "A modular password sprayer with threading, SSH proxying, loot modules, and more"
 authors = ["TheTechromancer"]
 license = "GPL-3.0"
@@ -13,7 +13,7 @@ Pygments = "^2.10.0"
 sh = "^1.14.2"
 PySocks = "^1.7.1"
 exchangelib = "^4.6.1"
-trevorproxy = "^1.0.3"
+trevorproxy = "^1.0.4"
 tldextract = "^3.1.2"
 beautifulsoup4 = "^4.10.0"
 
