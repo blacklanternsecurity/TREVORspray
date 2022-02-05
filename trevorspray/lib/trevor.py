@@ -192,7 +192,10 @@ class TrevorSpray:
 
     def discovery(self, domain):
 
-        domain = tldextract.extract(domain).fqdn
+        try:
+            domain = tldextract.extract(domain).fqdn
+        except Exception:
+            return None
         if not domain in self._discovery:
             self._discovery[domain] = DomainDiscovery(self, domain)
         return self._discovery[domain]
