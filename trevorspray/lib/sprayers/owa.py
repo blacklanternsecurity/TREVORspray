@@ -33,6 +33,7 @@ class OWA(BaseSprayModule):
             if self.trevor.domain:
                 self.domain = str(self.trevor.domain)
                 log.info(f'Using domain "{self.trevor.domain}"')
+                discovery = self.trevor.discovery(self.trevor.domain)
                 self.url = discovery.autodiscover().get('Url', 'none')
             else:
                 self.domain = 'office365.com'
@@ -72,7 +73,9 @@ class OWA(BaseSprayModule):
         exists = False
         valid = False
         locked = False
-        msg = f'[{response}]'
+
+        response_length = len(getattr(response, 'content', ''))
+        msg = f'[{response}] (Length: {response_length})'
 
         response_code = getattr(response, 'status_code', 0)
         if response_code in [200, 456]:
