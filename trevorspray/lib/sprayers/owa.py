@@ -33,10 +33,10 @@ class OWA(BaseSprayModule):
             if self.trevor.domain:
                 self.domain = str(self.trevor.domain)
                 log.info(f'Using domain "{self.trevor.domain}"')
-                discovery = self.trevor.discovery(self.trevor.domain)
                 self.url = discovery.autodiscover().get('Url', 'none')
             else:
                 self.domain = 'office365.com'
+        discovery = self.trevor.discovery(self.domain)
 
         if self.url == 'none':
             self.url = 'https://outlook.office365.com/autodiscover/autodiscover.xml'
