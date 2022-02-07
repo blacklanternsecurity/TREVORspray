@@ -12,6 +12,8 @@ class MSOL(BaseSprayModule):
     default_url = 'https://login.microsoft.com/common/oauth2/token'
     ipv6_url = 'https://prdv6a.aadg.msidentity.com/common/oauth2/token'
 
+    fail_nonexistent = False
+
     request_data = {
         'resource': 'https://graph.windows.net',
         'client_id': '38aa3b87-a06d-4817-b275-7a316988d93b',
@@ -36,10 +38,11 @@ class MSOL(BaseSprayModule):
             self.headers['Host'] = 'login.microsoft.com'
 
         discovery = self.trevor.discovery(self.trevor.domain)
-        userrealm = discovery.getuserrealm()
-        namespace = userrealm.get('NameSpaceType', 'Unknown')
-        if namespace == 'Federated':
-            log.warning(f'NameSpaceType for {self.trevor.domain} is "{namespace}", not "Managed". You may want to try the "adfs" module instead.')
+        if discovery is not None:
+            userrealm = discovery.getuserrealm()
+            namespace = userrealm.get('NameSpaceType', 'Unknown')
+            if namespace == 'Federated':
+                log.warning(f'NameSpaceType for {self.trevor.domain} is "{namespace}", not "Managed". You may want to try the "adfs" module instead.')
 
         return True
 

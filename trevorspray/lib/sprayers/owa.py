@@ -37,6 +37,7 @@ class OWA(BaseSprayModule):
                 self.url = discovery.autodiscover().get('Url', 'none')
             else:
                 self.domain = 'office365.com'
+        discovery = self.trevor.discovery(self.domain)
 
         if self.url == 'none':
             self.url = 'https://outlook.office365.com/autodiscover/autodiscover.xml'
@@ -72,7 +73,9 @@ class OWA(BaseSprayModule):
         exists = False
         valid = False
         locked = False
-        msg = f'[{response}]'
+
+        response_length = len(getattr(response, 'content', ''))
+        msg = f'[{response}] (Length: {response_length})'
 
         response_code = getattr(response, 'status_code', 0)
         if response_code in [200, 456]:

@@ -29,7 +29,7 @@ class BaseSprayModule:
     # HTTP cookies
     cookies = {}
     # Don't count nonexistent accounts as failed logons
-    fail_nonexistent = False
+    fail_nonexistent = True
     # Module for looting after successful login
     looter = None
     # How many times to retry HTTP requests

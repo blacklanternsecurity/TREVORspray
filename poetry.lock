@@ -363,7 +363,7 @@ requests-file = ">=1.4"
 
 [[package]]
 name = "trevorproxy"
-version = "1.0.3"
+version = "1.0.4"
 description = "Rotate your source IP address via SSH proxies and other methods"
 category = "main"
 optional = false
@@ -425,7 +425,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "fe54a8d3a3edfbb5e9e2f26f6e5740c09231170af6098e08146ccf0bf1a0c135"
+content-hash = "c2dd8bdacc072c1c5de9ca3621494915ea65b39fcd8686c22b2a211d40364211"
 
 [metadata.files]
 backports-datetime-fromisoformat = [
@@ -687,8 +687,8 @@ tldextract = [
     {file = "tldextract-3.1.2.tar.gz", hash = "sha256:d2034c3558651f7d8fdadea83fb681050b2d662dc67a00d950326dc902029444"},
 ]
 trevorproxy = [
-    {file = "trevorproxy-1.0.3-py3-none-any.whl", hash = "sha256:f560a35216029187d047f03f04f631915e290f0a417e8ce8d3dfd88286663a59"},
-    {file = "trevorproxy-1.0.3.tar.gz", hash = "sha256:15ed01a5b5f04a4605f5bb14f96da3821e1ae632bb79f43a26d8a3cb88cfdde9"},
+    {file = "trevorproxy-1.0.4-py3-none-any.whl", hash = "sha256:d6396204cf26eac8b34304f35c26e964dcda66ab5a4b661ba031a2d03a202014"},
+    {file = "trevorproxy-1.0.4.tar.gz", hash = "sha256:20cda7e6d269f9c7b02107a7ffa0e6405ce623f4ea27f32e3b5165cc3624c17c"},
 ]
 tzdata = [
     {file = "tzdata-2021.5-py2.py3-none-any.whl", hash = "sha256:3eee491e22ebfe1e5cfcc97a4137cd70f092ce59144d81f8924a844de05ba8f5"},

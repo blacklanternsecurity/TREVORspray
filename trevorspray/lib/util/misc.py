@@ -45,7 +45,7 @@ def files_to_list(l):
     for entry in l:
         entry = str(entry)
         try:
-            with open(entry) as f:
+            with open(entry, errors='ignore') as f:
                 for line in f.readlines():
                     entry = line.strip('\r\n').lower()
                     new_list[entry] = True
