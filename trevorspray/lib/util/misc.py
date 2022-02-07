@@ -132,11 +132,14 @@ def download_file(url, filename, **kwargs):
 
     log.debug(f'Downloading file from {url} to {filename}, {kwargs}')
     with request('GET', url, stream=True, **kwargs) as response:
-        log.debug(f'Download result: HTTP {response.status_code}, Size: {len(response.text)}')
-        response.raise_for_status()
-        with open(filename, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):  
-                f.write(chunk)
+        text = getattr(response, 'text', '')
+        status_code = getattr(response, 'status_code', 0)
+        log.debug(f'Download result: HTTP {status_code}, Size: {len(text)}')
+        if status_code != 0:
+            response.raise_for_status()
+            with open(filename, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):  
+                    f.write(chunk)
 
 
 def request(*args, **kwargs):
@@ -201,3 +204,5 @@ def request(*args, **kwargs):
             if retries == 'infinite' or retries >= 0:
                 log.warning(f'Error requesting "{url}", retrying...')
                 sleep(2)
+            else:
+                return e

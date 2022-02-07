@@ -8,6 +8,7 @@ import logging
 import argparse
 import requests
 import ipaddress
+from time import sleep
 from shutil import which
 from pathlib import Path
 from getpass import getpass
@@ -68,12 +69,17 @@ def main():
 
     try:
 
+        log.info(f'Command: {" ".join(sys.argv)}')
+
         options = parser.parse_args()
 
         conflicting_options = [options.subnet, options.ssh, options.proxy]
         if conflicting_options.count(None) + conflicting_options.count([]) < 2:
             log.error('Cannot specify --ssh, --subnet, or --proxy together')
             sys.exit(1)
+
+        if options.ssh and options.threads:
+            log.warning('When --ssh is specified, one thread is spawned per SSH session. Ignoring --threads')
 
         if options.proxy and options.ssh:
             log.error('Cannot specify --proxy with --ssh because the SSH hosts are already used as proxies')
@@ -84,6 +90,23 @@ def main():
             if network.version == 6:
                 log.info('IPv6 subnet specified, assuming --prefer-ipv6')
                 options.prefer_ipv6 = True
+
+        # inform user of --delay/--jitter configuration
+        avg_delay = options.delay + (options.jitter / 2)
+        per_minute = (60 / (max(1, avg_delay))) * max(1, len(options.ssh))
+        per_ip = 60 / max(1, avg_delay)
+        jitter_str = ('~' if options.jitter else '')
+        delays = []
+        if options.delay:
+            delays.append(f'--delay {options.delay}')
+        if options.jitter:
+            delays.append(f'--jitter {options.jitter}')
+        delays = ' + '.join(delays)
+        if options.ssh and (options.delay or options.lockout_delay or options.jitter):
+            log.warning('When proxying through --ssh, jitter/delay is *per IP*')
+            log.warning(f'{len(options.ssh)}x SSH hosts + {delays} == {jitter_str}{per_minute:.1f} attempts per minute == {jitter_str}{per_ip:.1f} per minute per IP')
+        elif options.delay or options.jitter:
+            log.info(f'{delays} == {jitter_str}{per_minute:.1f} attempts per minute')
 
         # Monkey patch to prioritize IPv4 or IPv6
         import socket
@@ -106,11 +129,6 @@ def main():
 
         trevorproxy_logger = logging.getLogger('trevorproxy')
         trevorspray_logger = logging.getLogger('trevorspray')
-        if options.verbose:
-            trevorproxy_logger.setLevel(logging.DEBUG)
-            trevorspray_logger.setLevel(logging.DEBUG)
-        else:
-            trevorproxy_logger.setLevel(logging.INFO)
         trevorproxy_logger.handlers = trevorspray_logger.handlers
 
         if not (options.users and options.passwords):
@@ -134,7 +152,6 @@ def main():
                     log.error(f'Please install {binary}')
                     sys.exit(1)
 
-        log.info(f'Command: {" ".join(sys.argv)}')
         sprayer = TrevorSpray(options)
         sprayer.go()
 

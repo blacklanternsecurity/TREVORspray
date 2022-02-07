@@ -115,14 +115,19 @@ log_file = log_dir / 'trevorspray.log'
 log_dir.mkdir(exist_ok=True)
 
 console_handler = logging.StreamHandler(sys.stdout)
+if any([x.lower() in ['--debug', '--verbose', '-v'] for x in sys.argv]):
+    console_handler.addFilter(lambda x: x.levelno >= logging.DEBUG)
+else:
+    console_handler.addFilter(lambda x: x.levelno >= logging.VERBOSE)
 console_handler.setFormatter(ColoredFormatter('%(levelname)s %(message)s'))
 file_handler = logging.FileHandler(str(log_file))
+file_handler.addFilter(lambda x: x.levelno >= logging.DEBUG)
 file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
 
 root_logger = logging.getLogger('trevorspray')
 root_logger.handlers = [console_handler, file_handler]
-root_logger.setLevel(logging.VERBOSE)
+root_logger.setLevel(logging.DEBUG)
 
 proxy_logger = logging.getLogger('trevorproxy')
 proxy_logger.handlers = [console_handler, file_handler]
-proxy_logger.setLevel(logging.VERBOSE)
+proxy_logger.setLevel(logging.DEBUG)
