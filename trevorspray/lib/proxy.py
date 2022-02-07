@@ -78,6 +78,8 @@ class ProxyThread(threading.Thread):
         self.lock = threading.Lock()
         self.q = None
 
+        self.initial_delay = 0
+
 
     def stop(self):
 
@@ -99,6 +101,11 @@ class ProxyThread(threading.Thread):
         while not self.trevor._stop:
 
             try:
+
+                if self.initial_delay:
+                    log.verbose(f'Initial delay for {self} - sleeping for {self.initial_delay:.1f} seconds')
+                    sleep(self.initial_delay)
+                    self.initial_delay = 0
 
                 user, password, enumerate_users = None, None, None
                 with self.lock:
@@ -182,7 +189,9 @@ class ProxyThread(threading.Thread):
                     log.verbose(f'Lockout encountered, sleeping thread for {self.trevor.options.lockout_delay:.1f} seconds')
                     sleep(self.trevor.options.lockout_delay)
 
-                if (self.trevor.options.delay or self.trevor.options.jitter) and (exists or locked or sprayer.fail_nonexistent):
+                if (self.trevor.options.delay or self.trevor.options.jitter) and \
+                    ((exists != False) or locked or sprayer.fail_nonexistent) and \
+                    not (self.q is None and self.trevor.stopping):
                     delay = float(self.trevor.options.delay)
                     jitter = random.random() * self.trevor.options.jitter
                     delay += jitter
@@ -194,6 +203,9 @@ class ProxyThread(threading.Thread):
                             log.debug(f'Sleeping for {delay:.1f} seconds ({self.trevor.options.delay:.1f}s delay + {jitter:.1f}s jitter)')
                             with self.trevor.lock:
                                 sleep(delay)
+
+                elif exists == False and not sprayer.fail_nonexistent:
+                    log.debug(f'Skipping delay since account doesn\'t exist ({self.trevor.sprayer.__class__.__name__}.fail_nonexistent = {self.trevor.sprayer.fail_nonexistent})')
 
                 self._running = False
 
@@ -238,69 +250,73 @@ class ProxyThread(threading.Thread):
         else:
             sprayer = self.trevor.sprayer
 
-        retries = (int(sprayer.retries) if sprayer.retries != 'infinite' else 'infinite')
         success = False
-        while not success and (retries == 'infinite' or retries >= 0):
+        while not success:
+            session = requests.Session()
             try:
-                session = requests.Session()
-                try:
-                    prepared_request = sprayer.create_request(user, password).prepare()
-                except Exception as e:
-                    log.error(f'Unhandled error in {sprayer.__class__.__name__}.create_request(): {e} (-v to debug)')
-                    if log.level <= logging.DEBUG:
-                        import traceback
-                        log.error(traceback.format_exc())
-                    self.trevor._stop = True
-                    self._running = False
-                    break
+                prepared_request = sprayer.create_request(user, password).prepare()
+            except Exception as e:
+                log.error(f'Unhandled error in {sprayer.__class__.__name__}.create_request(): {e} (-v to debug)')
+                if log.level <= logging.DEBUG:
+                    import traceback
+                    log.error(traceback.format_exc())
+                self.trevor._stop = True
+                self._running = False
+                break
 
-                # randomize user-agent if requested
-                if self.trevor.options.random_useragent:
-                    current_useragent = prepared_request.headers.get('User-Agent', windows_user_agent)
-                    prepared_request.headers['User-Agent'] = f'{current_useragent} {random.randint(0,99999)}.{random.randint(0,99999)}'
+            # randomize user-agent if requested
+            if self.trevor.options.random_useragent:
+                current_useragent = prepared_request.headers.get('User-Agent', windows_user_agent)
+                prepared_request.headers['User-Agent'] = f'{current_useragent} {random.randint(0,99999)}.{random.randint(0,99999)}'
 
-                kwargs = {
-                    'timeout': self.trevor.options.timeout,
-                    'allow_redirects': False,
-                    'verify': False
+            kwargs = {
+                'timeout': self.trevor.options.timeout,
+                'allow_redirects': False,
+                'verify': False,
+                'retries': (0 if self.trevor.options.ssh else 'infinite')
+            }
+            if self.trevor.options.proxy:
+                kwargs['proxies'] = {
+                    'http': self.trevor.options.proxy,
+                    'https': self.trevor.options.proxy
                 }
-                if self.trevor.options.proxy:
-                    kwargs['proxies'] = {
-                        'http': self.trevor.options.proxy,
-                        'https': self.trevor.options.proxy
-                    }
-                if self.proxy is not None:
-                    kwargs['proxies'] = self.proxy_arg
-                log.debug(f'HTTP {prepared_request.method} through proxy: {self.proxy}')
-                response = request(
-                    prepared_request,
-                    session=session,
-                    **kwargs
-                )
-                try:
-                    valid, exists, locked, msg = sprayer.check_response(response)
-                    success = True
-                except Exception as e:
-                    log.error(f'Unhandled error in {sprayer.__class__.__name__}.check_response(): {e} (-v to debug)')
-                    if log.level <= logging.DEBUG:
-                        import traceback
-                        log.error(traceback.format_exc())
-
-            except requests.exceptions.RequestException as e:
-                msg = f'{e}'
-                if retries != 'infinite':
-                    retries -= 1
-                if retries == 'infinite' or retries >= 0:
-                    log.debug(f'Error in request: {e}, retrying...')
-                else:
-                    log.debug(f'Error in request: {e}')
+            if self.proxy is not None:
+                kwargs['proxies'] = self.proxy_arg
+            log.debug(f'HTTP {prepared_request.method} through proxy: {self.proxy}')
+            response = request(
+                prepared_request,
+                session=session,
+                **kwargs
+            )
+            if isinstance(response, Exception):
+                log.error(f'Error in web request: {response}')
                 # rebuild proxy
                 if self.proxy_arg and not type(self.proxy) == str:
+                    log.verbose(f'Rebuilding proxy {self}')
                     try:
                         self.proxy.start()
                     except SSHProxyError as e:
                         log.error(e)
                 sleep(1)
+                continue
+            try:
+                valid, exists, locked, msg = sprayer.check_response(response)
+                success = True
+            except Exception as e:
+                log.error(f'Unhandled error in {sprayer.__class__.__name__}.check_response(): {e} (-v to debug)')
+                if log.level <= logging.DEBUG:
+                    import traceback
+                    log.error(traceback.format_exc())
 
         result = (valid, exists, locked, msg)
         return result
+
+
+    def __str__(self):
+
+        if self.proxy:
+            return str(self.proxy)
+        elif self.trevor.options.ssh:
+            return 'proxy thread'
+        else:
+            return 'thread'

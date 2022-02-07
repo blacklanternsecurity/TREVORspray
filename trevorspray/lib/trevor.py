@@ -54,15 +54,17 @@ class TrevorSpray:
             )
             self.subnet_proxy.start()
 
+        initial_delay_increment = (options.delay + (options.jitter / 2)) / max(1, len(options.ssh))
         for i,ssh_host in enumerate(threads):
-            self.proxies.append(
-                ProxyThread(
-                    trevor=self,
-                    host=ssh_host,
-                    proxy_port=options.base_port+i,
-                    daemon=True
-                )
+            proxy = ProxyThread(
+                trevor=self,
+                host=ssh_host,
+                proxy_port=options.base_port+i,
+                daemon=True
             )
+            if options.ssh or options.threads:
+                proxy.initial_delay = initial_delay_increment * i
+            self.proxies.append(proxy)
 
         self.user_enum = False
         self.user_enumerator = None
@@ -97,6 +99,7 @@ class TrevorSpray:
 
         self.lock = threading.Lock()
         self._stop = False
+        self.stopping = False
 
 
     def go(self):
@@ -156,11 +159,13 @@ class TrevorSpray:
                         accepted = proxy.submit(user, password, enumerate_users)
                         if accepted:
                             break
+                        
                     if not accepted:
                         time.sleep(.1)
 
         # wait until finished
-        while not all([not proxy.running for proxy in self.proxies]):
+        self.stopping = True
+        while not self.finished:
             log.verbose('Waiting for proxy threads to finish')
             time.sleep(2)
 
@@ -174,6 +179,7 @@ class TrevorSpray:
     def stop(self):
 
         log.debug('Stopping sprayer')
+        self.stopping = True
         self._stop = True
         for proxy in self.proxies:
             if proxy is not None:
@@ -188,6 +194,12 @@ class TrevorSpray:
         # write valid logins
         util.update_file(self.valid_logins_file, self.valid_logins)
         log.info(f'{len(self.valid_logins):,} valid user/pass combos written to {self.valid_logins_file}')
+
+
+    @property
+    def finished(self):
+
+        return all([not proxy.running for proxy in self.proxies])
 
 
     def discovery(self, domain):

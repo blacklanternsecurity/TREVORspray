@@ -60,7 +60,9 @@ class MSOL(BaseSprayModule):
         locked = False
         msg = ''
 
-        if getattr(response, 'status_code', 0) == 200:
+        status_code = getattr(response, 'status_code', 0)
+
+        if status_code == 200:
             exists = True
             valid = True
 
@@ -127,6 +129,8 @@ class MSOL(BaseSprayModule):
 
             else:
                 valid = None
-                msg = f'HTTP {response.status_code}: Got an error we haven\'t seen yet: {(r if r else response.text)}'
+                exists = None
+                content = getattr(response, 'content', '')
+                msg = f'HTTP {status_code}: Got an error we haven\'t seen yet: {(r if r else content)}'
 
         return (valid, exists, locked, msg)

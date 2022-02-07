@@ -56,10 +56,12 @@ class OneDriveUserEnum(BaseSprayModule):
         valid = None
         exists = False
         locked = None
-        msg = f'Response code "{response.status_code}"'
+
+        status_code = getattr(response, 'status_code', 0)
+        msg = f'Response code "{status_code}"'
 
         if response.status_code in [200, 401, 403, 302]:
-            msg = f'Confirmed valid user via OneDrive! (Response code "{response.status_code}")'
+            msg = f'Confirmed valid user via OneDrive! (Response code "{status_code}")'
             exists = True
 
         return (valid, exists, locked, msg)

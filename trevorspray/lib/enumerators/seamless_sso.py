@@ -47,7 +47,9 @@ class SeamlessSSO(BaseSprayModule):
         valid = None
         exists = False
         locked = None
-        msg = f'Response code "{response.status_code}"'
+
+        status_code = getattr(response, 'status_code', 0)
+        msg = f'Response code "{status_code}"'
 
         r = {}
         with suppress(Exception):

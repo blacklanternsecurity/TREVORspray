@@ -69,7 +69,7 @@ class AnyConnect(BaseSprayModule):
         selected_tunnelgroup = None
 
         # XML auth
-        if initial_response.status_code == 200:
+        if getattr(initial_response, 'status_code', 0) == 200:
             self.auth_type = 'xml'
             log.info('Detected XML auth')
             self.request_data = self.body_xml
@@ -90,7 +90,7 @@ class AnyConnect(BaseSprayModule):
                     }
 
         # plain auth
-        elif initial_response.status_code in (301, 302, 303):
+        elif getattr(initial_response, 'status_code', 0) in (301, 302, 303):
             self.auth_type = 'plain'
             self.headers = self.headers_plain
             host = '/'.join(initial_response.url.split('/', 3)[:3])
@@ -112,7 +112,7 @@ class AnyConnect(BaseSprayModule):
                 },
                 session=s
             )
-            if plain_response.status_code == 200:
+            if getattr(plain_response, 'status_code', 0) == 200:
                 try:
                     parsed_plain_response = etree.fromstring(plain_response.content)
                 except Exception as e:
@@ -135,7 +135,8 @@ class AnyConnect(BaseSprayModule):
                 self.request_data = self.body_plain_no_group
 
         else:
-            log.error(f'Received invalid response code "{initial_response.status_code}" from url: {url}')
+            status_code = getattr(initial_response, 'status_code', 0)
+            log.error(f'Received invalid response code "{status_code}" from url: {url}')
 
         if len(tunnelgroups) == 1:
             for alias, tunnelgroup in tunnelgroups.items():
