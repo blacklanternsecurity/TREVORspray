@@ -129,7 +129,7 @@ class ProxyThread(threading.Thread):
                 password_str = (f':{password}' if password else '')
                 with self.trevor.lock:
                     self.trevor.sprayed_counter += 1
-                    if login_id in self.trevor.tried_logins and not self.trevor.options.force and not enumerate_users:
+                    if not self.trevor.options.force and not enumerate_users and login_id in self.trevor.tried_logins:
                         log.info(f'Already tried {user}:{password}, skipping.')
                         self._running = False
                         continue

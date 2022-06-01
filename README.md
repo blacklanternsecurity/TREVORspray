@@ -39,6 +39,7 @@ See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool d
   - POP
   - EWS (Exchange Web Services) - Automatically retrieves GAL (Global Address Book)
   - EAS (Exchange ActiveSync)
+    - Recommended bypass: BlueMail Android app
   - EXO (Exchange Online PowerShell)
   - UM (Exchange Unified Messaging)
   - AutoDiscover - Automatically retrieves OAB (Offline Address Book)
