@@ -87,6 +87,10 @@ class MSOL(BaseSprayModule):
                 valid = True
                 msg = f'AADSTS90072: Valid credential, but not for this tenant.'
 
+            elif 'AADSTS530031' in error:
+                valid = True
+                msg = f'AADSTS530031: Valid credential, but access policy does not allow token issuance.'
+
             elif 'AADSTS50034' in error:
                 exists = False
                 msg = f'AADSTS50034: User does not exist.'
