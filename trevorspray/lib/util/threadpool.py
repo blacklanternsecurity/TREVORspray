@@ -4,12 +4,11 @@ import threading
 from time import sleep
 from contextlib import suppress
 
-log = logging.getLogger('trevorspray.util.threadpool')
+log = logging.getLogger("trevorspray.util.threadpool")
+
 
 class ThreadPool:
-
-    def __init__(self, maxthreads=10, name='threadpool'):
-
+    def __init__(self, maxthreads=10, name="threadpool"):
         self.maxthreads = int(maxthreads)
         self.name = str(name)
         self.pool = [None] * self.maxthreads
@@ -17,18 +16,16 @@ class ThreadPool:
         self.outputQueue = queue.SimpleQueue()
         self._stop = False
 
-
     def start(self):
-
-        log.debug(f'Starting thread pool "{self.name}" with {self.maxthreads:,} threads')
+        log.debug(
+            f'Starting thread pool "{self.name}" with {self.maxthreads:,} threads'
+        )
         for i in range(self.maxthreads):
             t = ThreadWorker(pool=self, name=f"{self.name}_worker_{i + 1}")
             t.start()
             self.pool[i] = t
 
-
     def results(self, wait=False):
-
         while 1:
             result = False
             with suppress(Exception):
@@ -39,18 +36,15 @@ class ThreadPool:
                 break
             if not result:
                 # sleep briefly to save CPU
-                sleep(.1)
-
+                sleep(0.1)
 
     @property
     def queuedTasks(self):
-
         queuedTasks = 0
         with suppress(Exception):
             queuedTasks += self.inputQueue.qsize()
         queuedTasks += [t.busy for t in self.pool if t is not None].count(True)
         return queuedTasks
-
 
     @property
     def finished(self):
@@ -62,36 +56,34 @@ class ThreadPool:
                 inputThreadAlive = self.inputThread.is_alive()
             except AttributeError:
                 inputThreadAlive = False
-            return not inputThreadAlive and self.inputQueue.empty() and all(finishedThreads)
-
+            return (
+                not inputThreadAlive
+                and self.inputQueue.empty()
+                and all(finishedThreads)
+            )
 
     def submit(self, callback, *args, **kwargs):
-
         self.inputQueue.put((callback, args, kwargs))
 
-
     def map(self, callback, iterable, *args, **kwargs):
-
-        self.inputThread = threading.Thread(target=self.feedQueue, args=(callback, iterable, args, kwargs), daemon=True)
+        self.inputThread = threading.Thread(
+            target=self.feedQueue, args=(callback, iterable, args, kwargs), daemon=True
+        )
         self.inputThread.start()
         self.start()
-        sleep(.1)
+        sleep(0.1)
         yield from self.results(wait=True)
 
-
     def feedQueue(self, callback, iterable, args, kwargs):
-
         for i in iterable:
             if self._stop:
                 break
             self.submit(callback, i, *args, **kwargs)
 
-
     def stop(self, wait=True):
-
         results = []
 
-        log.debug(f'Shutting down thread pool with wait={wait}')
+        log.debug(f"Shutting down thread pool with wait={wait}")
         results += list(self.results(wait=wait))
 
         self._stop = True
@@ -110,28 +102,21 @@ class ThreadPool:
 
         return results
 
-
     def __enter__(self):
         return self
-
 
     def __exit__(self, exception_type, exception_value, traceback):
         self.stop(wait=False)
 
 
-
 class ThreadWorker(threading.Thread):
-
-    def __init__(self, pool, name='worker'):
-
+    def __init__(self, pool, name="worker"):
         self.pool = pool
         self.busy = False
 
         super().__init__(name=str(name), daemon=True)
 
-
     def run(self):
-
         while not self.pool._stop:
             ran = False
             self.busy = True
@@ -142,7 +127,10 @@ class ThreadWorker(threading.Thread):
                     ran = True
                 except Exception:
                     import traceback
-                    log.error(f'Error in thread worker {self.name}: {traceback.format_exc()}')
+
+                    log.error(
+                        f"Error in thread worker {self.name}: {traceback.format_exc()}"
+                    )
                     break
                 except KeyboardInterrupt:
                     log.error(f'Thread worker "{name}" Interrupted')
@@ -153,4 +141,4 @@ class ThreadWorker(threading.Thread):
             finally:
                 self.busy = False
             if not ran:
-                sleep(.1)
+                sleep(0.1)

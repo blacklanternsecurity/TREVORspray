@@ -12,7 +12,7 @@
 ##
 ## For example:
 ##
-##   $ echo "TlRMTVNTUAABAAAABYIIAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAA" | ./ntlmdecoder.py 
+##   $ echo "TlRMTVNTUAABAAAABYIIAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAA" | ./ntlmdecoder.py
 ##   Found NTLMSSP header
 ##   Msg Type: 1 (Request)
 ##   Domain: '' [] (0b @0)
@@ -28,7 +28,7 @@ import collections
 import logging
 from binascii import hexlify
 
-log = logging.getLogger('trevorspray.util.ntlmdecoder')
+log = logging.getLogger("trevorspray.util.ntlmdecoder")
 
 flags_tbl_str = """0x00000001  Negotiate Unicode
 0x00000002  Negotiate OEM
@@ -63,7 +63,7 @@ flags_tbl_str = """0x00000001  Negotiate Unicode
 0x40000000  Negotiate Key Exchange
 0x80000000  Negotiate 56"""
 
-flags_tbl = [line.split('  ') for line in flags_tbl_str.split('\n')]
+flags_tbl = [line.split("  ") for line in flags_tbl_str.split("\n")]
 flags_tbl = [(int(x, base=16), y) for x, y in flags_tbl]
 VALID_CHRS = set(string.ascii_letters + string.digits + string.punctuation)
 
@@ -73,11 +73,11 @@ def flags_lst(flags):
 
 
 def flags_str(flags):
-    return ', '.join('"%s"' % s for s in flags_lst(flags))
+    return ", ".join('"%s"' % s for s in flags_lst(flags))
 
 
 def clean_str(st):
-    return ''.join((s if s in VALID_CHRS else '?') for s in st)
+    return "".join((s if s in VALID_CHRS else "?") for s in st)
 
 
 class StrStruct(object):
@@ -86,20 +86,23 @@ class StrStruct(object):
         self.length = length
         self.alloc = alloc
         self.offset = offset
-        self.raw = raw[offset:offset + length]
+        self.raw = raw[offset : offset + length]
         self.utf16 = False
 
-        if len(self.raw) >= 2 and self.raw[1] == '\0':
-            self.string = self.raw.decode('utf-16')
+        if len(self.raw) >= 2 and self.raw[1] == "\0":
+            self.string = self.raw.decode("utf-16")
             self.utf16 = True
         else:
             self.string = self.raw
 
     def __str__(self):
-        st = "%s'%s' [%s] (%db @%d)" % ('u' if self.utf16 else '',
-                                        clean_str(self.string),
-                                        hexlify(self.raw),
-                                        self.length, self.offset)
+        st = "%s'%s' [%s] (%db @%d)" % (
+            "u" if self.utf16 else "",
+            clean_str(self.string),
+            hexlify(self.raw),
+            self.length,
+            self.offset,
+        )
         if self.alloc != self.length:
             st += " alloc: %d" % self.alloc
         return st
@@ -121,7 +124,7 @@ target_field_types[7] = "Timestamp"
 
 
 def opt_str_struct(name, st, offset):
-    nxt = st[offset:offset + 8]
+    nxt = st[offset : offset + 8]
     if len(nxt) == 8:
         hdr_tup = struct.unpack("<hhi", nxt)
         print("%s: %s" % (name, StrStruct(hdr_tup, st)))
@@ -130,7 +133,7 @@ def opt_str_struct(name, st, offset):
 
 
 def opt_inline_str(name, st, offset, sz):
-    nxt = st[offset:offset + sz]
+    nxt = st[offset : offset + sz]
     if len(nxt) == sz:
         print("%s: '%s'" % (name, clean_str(nxt)))
     else:
@@ -154,12 +157,12 @@ def pretty_print_challenge(st):
 
     parsed_challange = {}
 
-    #print("Target Name: %s" % StrStruct(hdr_tup[0:3], st))
-    #print("Challenge: 0x%x" % hdr_tup[4])
+    # print("Target Name: %s" % StrStruct(hdr_tup[0:3], st))
+    # print("Challenge: 0x%x" % hdr_tup[4])
 
     flags = hdr_tup[3]
 
-    #opt_str_struct("Context", st, 32)
+    # opt_str_struct("Context", st, 32)
 
     nxt = st[40:48]
     if len(nxt) == 8:
@@ -169,28 +172,28 @@ def pretty_print_challenge(st):
         output = "Target: [block] (%db @%d)" % (tgt.length, tgt.offset)
         if tgt.alloc != tgt.length:
             output += " alloc: %d" % tgt.alloc
-        #print(output)
+        # print(output)
 
         raw = tgt.raw
         pos = 0
 
         while pos + 4 < len(raw):
-            rec_hdr = struct.unpack("<hh", raw[pos: pos + 4])
+            rec_hdr = struct.unpack("<hh", raw[pos : pos + 4])
             rec_type_id = rec_hdr[0]
             rec_type = target_field_types[rec_type_id]
             rec_sz = rec_hdr[1]
-            subst = raw[pos + 4: pos + 4 + rec_sz]
+            subst = raw[pos + 4 : pos + 4 + rec_sz]
             try:
-                parsed_challange[rec_type] = subst.replace(b'\x00', b'').decode()
-                #print("    %s (%d): %s" % (rec_type, rec_type_id, subst.replace(b'\x00', b'').decode()))
+                parsed_challange[rec_type] = subst.replace(b"\x00", b"").decode()
+                # print("    %s (%d): %s" % (rec_type, rec_type_id, subst.replace(b'\x00', b'').decode()))
             except UnicodeDecodeError:
-                parsed_challange[rec_type] = subst.replace(b'\x00', b'')
-                #print("    %s (%d): %s" % (rec_type, rec_type_id, subst.replace(b'\x00', b'')))
+                parsed_challange[rec_type] = subst.replace(b"\x00", b"")
+                # print("    %s (%d): %s" % (rec_type, rec_type_id, subst.replace(b'\x00', b'')))
             pos += 4 + rec_sz
 
-    #opt_inline_str("OS Ver", st, 48, 8)
+    # opt_inline_str("OS Ver", st, 48, 8)
 
-    #print("Flags: 0x%x [%s]" % (flags, flags_str(flags)))
+    # print("Flags: 0x%x [%s]" % (flags, flags_str(flags)))
     return parsed_challange
 
 
@@ -216,23 +219,27 @@ def pretty_print_response(st):
 
 
 def ntlmdecode(authenticate_header):
-    _, st_raw = authenticate_header.split(',')[0].split()
+    _, st_raw = authenticate_header.split(",")[0].split()
     try:
         st = base64.b64decode(st_raw)
     except Exception as e:
-        raise Exception(f"Input seems to be a non-valid base64-encoded string: '{authenticate_header}'")
+        raise Exception(
+            f"Input seems to be a non-valid base64-encoded string: '{authenticate_header}'"
+        )
 
-    if not st[:8] == b'NTLMSSP\x00':
+    if not st[:8] == b"NTLMSSP\x00":
         raise Exception("NTLMSSP header not found at start of input string")
 
     ver_tup = struct.unpack("<i", st[8:12])
     ver = ver_tup[0]
 
-    #print("Msg Type: %d (%s)" % (ver, msg_types[ver]))
+    # print("Msg Type: %d (%s)" % (ver, msg_types[ver]))
 
-    #if ver == 1:
-        #pretty_print_request(st)
+    # if ver == 1:
+    # pretty_print_request(st)
 
     return pretty_print_challenge(st)
 
-    raise Exception(f"Unknown message structure.  Have a raw (hex-encoded) message: {hexlify(st)}")
+    raise Exception(
+        f"Unknown message structure.  Have a raw (hex-encoded) message: {hexlify(st)}"
+    )

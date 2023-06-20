@@ -8,12 +8,14 @@ module_files = list(os.listdir(module_dir))
 module_choices = {}
 
 for file in module_files:
-
     file = module_dir / file
 
-    if file.is_file() and file.suffix.lower() == '.py' and file.stem not in ['base', '__init__']:
-
-        modules = importlib.import_module(f'lib.enumerators.{file.stem}', 'trevorspray')
+    if (
+        file.is_file()
+        and file.suffix.lower() == ".py"
+        and file.stem not in ["base", "__init__"]
+    ):
+        modules = importlib.import_module(f"lib.enumerators.{file.stem}", "trevorspray")
 
         for m in modules.__dict__.keys():
             module = getattr(modules, m)
