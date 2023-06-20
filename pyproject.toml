@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trevorspray"
-version = "2.0.7"
+version = "2.0.8"
 description = "A modular password sprayer with threading, SSH proxying, loot modules, and more"
 authors = ["TheTechromancer"]
 license = "GPL-3.0"

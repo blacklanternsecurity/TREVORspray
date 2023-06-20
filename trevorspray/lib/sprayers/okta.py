@@ -8,14 +8,14 @@ log = logging.getLogger("trevorspray.sprayers.okta")
 
 class Okta(BaseSprayModule):
     # default target URL
-    default_url = "https://{subdomain}.okta.com/api/v1/authn"
+    default_url = "https://{domain}/api/v1/authn"
 
     request_json = {
         "options": {
             "warnBeforePasswordExpired": True,
             "multiOptionalFactorEnroll": True,
         },
-        "subdomain": "{subdomain}",
+        "domain": "{domain}",
         "username": "{username}",
         "password": "{password}",
     }
@@ -33,11 +33,11 @@ class Okta(BaseSprayModule):
                 f"Okta hides lockout failures by default! --delay is recommended."
             )
 
-        while not self.trevor.runtimeparams.get("subdomain", ""):
+        while not self.trevor.runtimeparams.get("domain", ""):
             self.trevor.runtimeparams.update(
                 {
-                    "subdomain": input(
-                        "\n[USER] Enter target subdomain (<subdomain>.okta.com): "
+                    "domain": input(
+                        "\n[USER] Enter target domain (e.g. customer.okta.com): "
                     ).strip()
                 }
             )
