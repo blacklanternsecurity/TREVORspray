@@ -1,7 +1,7 @@
 import os
 import importlib
 from pathlib import Path
-from ..sprayers.base import BaseSprayModule
+from .base import BaseSprayModule
 
 module_dir = Path(__file__).parent
 module_files = list(os.listdir(module_dir))
@@ -13,7 +13,7 @@ for file in module_files:
 
     if file.is_file() and file.suffix.lower() == '.py' and file.stem not in ['base', '__init__']:
 
-        modules = importlib.import_module(f'lib.sprayers.{file.stem}', 'trevorspray')
+        modules = importlib.import_module(f'trevorspray.lib.sprayers.{file.stem}', 'trevorspray')
 
         for m in modules.__dict__.keys():
             module = getattr(modules, m)

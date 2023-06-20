@@ -9,6 +9,7 @@ from pathlib import Path
 from . import enumerators
 from contextlib import suppress
 from tldextract import tldextract
+from .errors import TREVORSprayError
 from .discover import DomainDiscovery
 from .proxy import ProxyThread, SubnetThread
 
@@ -86,6 +87,8 @@ class TrevorSpray:
         sprayer_class = sprayers.module_choices.get(options.module, None)
         if sprayer_class is not None:
             self.sprayer = sprayer_class(trevor=self)
+        else:
+            raise TREVORSprayError(f"Failed to load sprayer \"{options.module}\"")
 
         self.existent_users_file = str(self.home / 'existent_users.txt')
         self.valid_logins_file = str(self.home / 'valid_logins.txt')

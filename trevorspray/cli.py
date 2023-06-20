@@ -21,11 +21,11 @@ requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 package_path = Path(__file__).resolve().parent
 sys.path.append(str(package_path))
 
-from lib import logger
+from .lib import logger
 import lib.util as util
-from lib import sprayers
-from lib.trevor import TrevorSpray
-from lib.errors import TREVORSprayError
+from .lib import sprayers
+from .lib.trevor import TrevorSpray
+from .lib.errors import TREVORSprayError
 
 log = logging.getLogger('trevorspray.cli')
 
