@@ -1,26 +1,20 @@
-import os
 import importlib
 from pathlib import Path
 from ..sprayers.base import BaseSprayModule
 
 module_dir = Path(__file__).parent
-module_files = list(os.listdir(module_dir))
 module_choices = {}
 
-for file in module_files:
-    file = module_dir / file
-
-    if (
-        file.is_file()
-        and file.suffix.lower() == ".py"
-        and file.stem not in ["base", "__init__"]
-    ):
-        modules = importlib.import_module(f"lib.enumerators.{file.stem}", "trevorspray")
+for file in module_dir.glob("*.py"):
+    if file.is_file() and file.stem not in ["base", "__init__"]:
+        modules = importlib.import_module(
+            f"trevorspray.lib.enumerators.{file.stem}", "trevorspray"
+        )
 
         for m in modules.__dict__.keys():
             module = getattr(modules, m)
             try:
-                if BaseSprayModule in module.__bases__:
+                if BaseSprayModule in module.__mro__:
                     module_choices[file.stem] = module
             except AttributeError:
                 continue
