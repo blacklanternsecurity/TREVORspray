@@ -28,8 +28,8 @@ class JumpCloud(BaseSprayModule):
     def create_request(self, username, password):
         response = super().create_request(username, password)
         proxies = None
-        if self.trevor.proxies:
-            proxies = self.trevor.proxies[0].proxy_arg
+        # if self.trevor.proxies:
+        #     proxies = self.trevor.proxies[0].proxy_arg
 
         xsrf_url = "https://console.jumpcloud.com/userconsole/xsrf"
         xsrf_response = requests.get(xsrf_url, headers=self.headers, proxies=proxies)
