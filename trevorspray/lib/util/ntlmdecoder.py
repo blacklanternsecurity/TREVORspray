@@ -160,8 +160,6 @@ def pretty_print_challenge(st):
     # print("Target Name: %s" % StrStruct(hdr_tup[0:3], st))
     # print("Challenge: 0x%x" % hdr_tup[4])
 
-    flags = hdr_tup[3]
-
     # opt_str_struct("Context", st, 32)
 
     nxt = st[40:48]
@@ -222,21 +220,13 @@ def ntlmdecode(authenticate_header):
     _, st_raw = authenticate_header.split(",")[0].split()
     try:
         st = base64.b64decode(st_raw)
-    except Exception as e:
+    except Exception:
         raise Exception(
             f"Input seems to be a non-valid base64-encoded string: '{authenticate_header}'"
         )
 
     if not st[:8] == b"NTLMSSP\x00":
         raise Exception("NTLMSSP header not found at start of input string")
-
-    ver_tup = struct.unpack("<i", st[8:12])
-    ver = ver_tup[0]
-
-    # print("Msg Type: %d (%s)" % (ver, msg_types[ver]))
-
-    # if ver == 1:
-    # pretty_print_request(st)
 
     return pretty_print_challenge(st)
 

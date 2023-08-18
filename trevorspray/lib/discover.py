@@ -1,11 +1,7 @@
 import re
-import json
-import socket
 import logging
-import requests
 import dns.resolver
 from .util import *
-import concurrent.futures
 from contextlib import suppress
 from urllib.parse import urlparse, urlunparse
 

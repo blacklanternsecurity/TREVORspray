@@ -111,6 +111,7 @@ class ThreadPool:
 
 class ThreadWorker(threading.Thread):
     def __init__(self, pool, name="worker"):
+        self.name = name
         self.pool = pool
         self.busy = False
 
@@ -133,7 +134,7 @@ class ThreadWorker(threading.Thread):
                     )
                     break
                 except KeyboardInterrupt:
-                    log.error(f'Thread worker "{name}" Interrupted')
+                    log.error(f'Thread worker "{self.name}" Interrupted')
                     self.pool._stop = True
                     raise
             except queue.Empty:

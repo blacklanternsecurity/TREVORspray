@@ -1,5 +1,4 @@
 import logging
-from ..util import request
 from ..sprayers.base import BaseSprayModule
 
 log = logging.getLogger("trevorspray.enumerators.onedrive")

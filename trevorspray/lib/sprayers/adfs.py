@@ -1,7 +1,7 @@
 import logging
 from bs4 import BeautifulSoup
 from .base import BaseSprayModule
-from ..util import is_domain, is_subdomain, is_url
+from ..util import is_domain, is_url
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 log = logging.getLogger("trevorspray.sprayers.adfs")

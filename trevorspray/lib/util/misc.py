@@ -98,7 +98,7 @@ def ssh_key_encrypted(f=None):
         )
         if not "incorrect" in p.stderr.decode():
             return False
-    except:
+    except Exception:
         pass
     return True
 

@@ -1,7 +1,6 @@
 import os
 import time
 import logging
-import importlib
 import threading
 from . import util
 from . import sprayers
