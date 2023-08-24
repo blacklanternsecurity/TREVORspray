@@ -59,7 +59,7 @@ class MSOLLooter(Looter):
         hosts = ["outlook.office365.com:587", "smtp.office365.com:587"]
         for host in hosts:
             try:
-                session = smtplib.SMTP(host)
+                session = smtplib.SMTP(host, timeout=5)
                 log.debug(session.starttls())
                 session.login(username, password)
                 log.success(f"MFA bypass (SMTP) enabled for {username}!")

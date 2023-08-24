@@ -53,7 +53,7 @@ def main():
         "--passwords",
         nargs="+",
         default=[],
-        help="Password(s) that will be used to perform the password spray",
+        help="Password(s) and/or file(s) containing passwords",
     )
     basic_group.add_argument("--url", help="The URL to spray against")
     basic_group.add_argument(
@@ -263,6 +263,8 @@ def main():
                 sys.exit(2)
         if options.users:
             options.users = list(util.files_to_list(options.users).keys())
+        if options.passwords:
+            options.passwords = list(util.files_to_list(options.passwords).keys())
 
         if options.no_current_ip and not options.ssh:
             log.error("Cannot specify --no-current-ip without giving --ssh hosts")
