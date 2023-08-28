@@ -37,14 +37,16 @@ def highlight_xml(x):
     return highlight(x, XmlLexer(), TerminalFormatter())
 
 
-def files_to_list(l):
+def files_to_list(l, lowercase=False):
     new_list = dict()
     for entry in l:
         entry = str(entry)
         try:
             with open(entry, errors="ignore") as f:
                 for line in f.readlines():
-                    entry = line.strip("\r\n").lower()
+                    entry = line.strip("\r\n")
+                    if lowercase:
+                        entry = entry.lower()
                     new_list[entry] = True
         except OSError:
             if entry and entry not in new_list:

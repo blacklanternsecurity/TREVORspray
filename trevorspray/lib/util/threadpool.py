@@ -111,11 +111,11 @@ class ThreadPool:
 
 class ThreadWorker(threading.Thread):
     def __init__(self, pool, name="worker"):
-        self.name = name
         self.pool = pool
         self.busy = False
 
         super().__init__(name=str(name), daemon=True)
+        self.name = name
 
     def run(self):
         while not self.pool._stop:

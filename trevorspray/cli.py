@@ -262,7 +262,9 @@ def main():
                 log.error("Please specify --users and --passwords, or --recon")
                 sys.exit(2)
         if options.users:
-            options.users = list(util.files_to_list(options.users).keys())
+            options.users = list(
+                util.files_to_list(options.users, lowercase=True).keys()
+            )
         if options.passwords:
             options.passwords = list(util.files_to_list(options.passwords).keys())
 
