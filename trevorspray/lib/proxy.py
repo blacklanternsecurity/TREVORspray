@@ -265,7 +265,9 @@ class ProxyThread(threading.Thread):
         while not success:
             session = requests.Session()
             try:
-                prepared_request = sprayer.create_request(user, password).prepare()
+                prepared_request = sprayer.create_request(
+                    user, password, self
+                ).prepare()
             except Exception as e:
                 log.error(
                     f"Unhandled error in {sprayer.__class__.__name__}.create_request(): {e} (-v to debug)"

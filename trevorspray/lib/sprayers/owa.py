@@ -63,7 +63,7 @@ class OWA(BaseSprayModule):
 
         return True
 
-    def create_request(self, username, password):
+    def create_request(self, username, password, proxythread):
         """
         Returns request.Request() object
         """

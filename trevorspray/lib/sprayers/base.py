@@ -65,7 +65,7 @@ class BaseSprayModule:
     def create_params(self, username, password):
         return {self.userparam: username, self.passparam: password}
 
-    def create_request(self, username, password):
+    def create_request(self, username, password, proxythread):
         """
         Returns request.Request() object
         """

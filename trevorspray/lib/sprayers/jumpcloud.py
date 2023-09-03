@@ -1,6 +1,5 @@
 import logging
 import requests
-import random
 from .base import BaseSprayModule
 
 log = logging.getLogger("trevorspray.sprayers.jumpcloud")
@@ -25,14 +24,13 @@ class JumpCloud(BaseSprayModule):
         "Origin": "https://console.jumpcloud.com",
     }
 
-    def create_request(self, username, password):
-        response = super().create_request(username, password)
-        proxies = None
-        # if self.trevor.proxies:
-        #     proxies = self.trevor.proxies[0].proxy_arg
+    def create_request(self, username, password, proxythread):
+        request = super().create_request(username, password)
 
         xsrf_url = "https://console.jumpcloud.com/userconsole/xsrf"
-        xsrf_response = requests.get(xsrf_url, headers=self.headers, proxies=proxies)
+        xsrf_response = requests.get(
+            xsrf_url, headers=self.headers, proxies=proxythread.proxy_arg
+        )
         xsrf_token = xsrf_response.json().get("xsrf", "")
         xsrf_cookie = xsrf_response.cookies.get("_xsrf", "")
         if not xsrf_token:
@@ -52,9 +50,9 @@ class JumpCloud(BaseSprayModule):
         }
         headers.update(self.headers)
 
-        response.headers = headers
-        response.cookies = cookies
-        return response
+        request.headers = headers
+        request.cookies = cookies
+        return request
 
     def check_response(self, response):
         valid = False

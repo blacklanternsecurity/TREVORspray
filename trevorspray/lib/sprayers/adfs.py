@@ -54,7 +54,7 @@ class ADFS(BaseSprayModule):
 
         return True
 
-    def create_request(self, username, password):
+    def create_request(self, username, password, proxythread):
         request = super().create_request(username, password)
         parsed_url = urlparse(self.url)
 
