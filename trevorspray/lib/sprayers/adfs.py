@@ -55,7 +55,7 @@ class ADFS(BaseSprayModule):
         return True
 
     def create_request(self, username, password, proxythread):
-        request = super().create_request(username, password)
+        request = super().create_request(username, password, proxythread)
         parsed_url = urlparse(self.url)
 
         # replace dummy username query parameter in the AuthURL

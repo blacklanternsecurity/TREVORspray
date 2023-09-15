@@ -68,7 +68,7 @@ class OWA(BaseSprayModule):
         Returns request.Request() object
         """
 
-        r = super().create_request(username, password)
+        r = super().create_request(username, password, proxythread)
         if self.o365:
             r.auth = (username, password)
         else:

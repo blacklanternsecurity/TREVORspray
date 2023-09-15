@@ -25,7 +25,7 @@ class JumpCloud(BaseSprayModule):
     }
 
     def create_request(self, username, password, proxythread):
-        request = super().create_request(username, password)
+        request = super().create_request(username, password, proxythread)
 
         xsrf_url = "https://console.jumpcloud.com/userconsole/xsrf"
         xsrf_response = requests.get(
