@@ -91,7 +91,7 @@ class Auth0(BaseSprayModule):
             valid = True
             location = response.headers.get("Location", "")
             if location:
-                msg = f"Location: {location}\n" 
+                msg = f"Location: {location}\n"
             msg += "Cookie: "
             for k, v in response.cookies.items():
                 msg += f"{k}={v};"
