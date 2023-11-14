@@ -257,10 +257,9 @@ def main():
         trevorspray_logger = logging.getLogger("trevorspray")
         trevorproxy_logger.handlers = trevorspray_logger.handlers
 
-        if not (options.users and options.passwords):
-            if not options.recon:
-                log.error("Please specify --users and --passwords, or --recon")
-                sys.exit(2)
+        if not (options.users and options.passwords) and not options.recon:
+            log.error("Please specify --users and --passwords, or --recon")
+            sys.exit(2)
         if options.users:
             options.users = list(
                 util.files_to_list(options.users, lowercase=True).keys()
