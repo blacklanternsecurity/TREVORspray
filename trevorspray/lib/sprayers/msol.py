@@ -94,10 +94,15 @@ class MSOL(BaseSprayModule):
                 exists = False
                 msg = f"AADSTS50034: User does not exist."
 
-            elif "AADSTS50079" in error or "AADSTS50076" in error:
+            elif "AADSTS50076" in error:
                 valid = True
                 # Microsoft MFA response
-                msg = f"AADSTS50079: The response indicates MFA (Microsoft) is in use."
+                msg = f"AADSTS50076: The response indicates MFA (Microsoft) is in use."
+
+            elif "AADSTS50079" in error:
+                valid = True
+                # Microsoft MFA response
+                msg = f"AADSTS50079: The response indicates MFA (Microsoft) must be onboarded!"
 
             elif "AADSTS50055" in error:
                 valid = True
