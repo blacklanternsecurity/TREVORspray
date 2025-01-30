@@ -146,6 +146,8 @@ optional arguments:
 basic arguments:
   -m {owa,okta,anyconnect,adfs,msol}, --module {owa,okta,anyconnect,adfs,msol}
                         Spray module to use (default: msol)
+  -up USERPASS [USERPASS ...], --userpass USERPASS [USERPASS ...]
+                        file(s) containing username and password pairs
   -u USERS [USERS ...], --users USERS [USERS ...]
                         Usernames(s) and/or file(s) containing usernames
   -p PASSWORDS [PASSWORDS ...], --passwords PASSWORDS [PASSWORDS ...]
