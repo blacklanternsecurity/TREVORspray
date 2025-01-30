@@ -187,7 +187,7 @@ class TrevorSpray:
                             time.sleep(0.1)
         elif user_pass:
             for line in self.options.userpass:
-                username, password = line.split(",")
+                username, password = line.split(":", 1)
                 accepted = False
                 while not accepted and not self._stop:
                     for proxy in self.proxies:

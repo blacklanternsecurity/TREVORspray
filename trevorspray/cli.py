@@ -46,7 +46,7 @@ def main():
         "--userpass",
         nargs="+",
         default=[],
-        help="file(s) containing username and password pairs"
+        help="file(s) containing username and password pairs (format: 'username:password')"
     )
     basic_group.add_argument(
         "-u",
@@ -270,7 +270,7 @@ def main():
         trevorproxy_logger.handlers = trevorspray_logger.handlers
 
         if not (options.users and options.passwords) and not options.userpass and not options.recon:
-            log.error("Please specify --users and --passwords, or --userpass or --recon")
+            log.error("Please specify --users and --passwords, --userpass, or --recon")
             sys.exit(2)
         if options.userpass:
             options.userpass = list(util.files_to_list(options.userpass).keys())
