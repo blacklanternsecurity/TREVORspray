@@ -134,38 +134,40 @@ egrep -oa '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}' oab.bin | tr '[:uppe
 ## TREVORspray - Help:
 ```
 $ trevorspray --help
-usage: trevorspray [-h] [-m {owa,okta,anyconnect,adfs,msol}] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL] [-r DOMAIN] [-t THREADS] [-f] [-d DELAY]
-                   [-ld LOCKOUT_DELAY] [-j JITTER] [-e] [-nl] [--ignore-lockouts] [--timeout TIMEOUT] [--random-useragent] [-6] [--proxy PROXY] [-v] [-s USER@SERVER [USER@SERVER ...]]
-                   [-i KEY] [-b BASE_PORT] [-n] [--interface INTERFACE] [--subnet SUBNET]
+usage: trevorspray [-h] [-m {owa,okta,auth0,anyconnect,jumpcloud,adfs,msol,example}] [-up USERPASS [USERPASS ...]] [-u USERS [USERS ...]] [-p PASSWORDS [PASSWORDS ...]] [--url URL]
+                   [-r DOMAIN] [--export-tenants FILE] [-t THREADS] [-f] [-d DELAY] [-ld LOCKOUT_DELAY] [-j JITTER] [-e] [-nl] [--ignore-lockouts] [--timeout TIMEOUT] [--random-useragent]
+                   [-6] [--proxy PROXY] [-v] [-s USER@SERVER [USER@SERVER ...]] [-i KEY] [-b BASE_PORT] [-n] [--subnet SUBNET] [--interface INTERFACE]
 
 A password sprayer with the option to load-balance traffic through SSH hosts
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
 
 basic arguments:
-  -m {owa,okta,anyconnect,adfs,msol}, --module {owa,okta,anyconnect,adfs,msol}
+  -m, --module {owa,okta,auth0,anyconnect,jumpcloud,adfs,msol,example}
                         Spray module to use (default: msol)
-  -u USERS [USERS ...], --users USERS [USERS ...]
+  -up, --userpass USERPASS [USERPASS ...]
+                        file(s) containing username and password pairs (format: 'username:password')
+  -u, --users USERS [USERS ...]
                         Usernames(s) and/or file(s) containing usernames
-  -p PASSWORDS [PASSWORDS ...], --passwords PASSWORDS [PASSWORDS ...]
-                        Password(s) that will be used to perform the password spray
+  -p, --passwords PASSWORDS [PASSWORDS ...]
+                        Password(s) and/or file(s) containing passwords
   --url URL             The URL to spray against
-  -r DOMAIN, --recon DOMAIN, --enumerate DOMAIN
+  -r, --recon, --enumerate DOMAIN
                         Retrieves MX records and info related to authentication, email, Azure, Microsoft 365, etc. If --usernames are specified, this also enables username enumeration.
+  --export-tenants FILE
+                        Export all discovered tenant domains to a file
 
 advanced arguments:
   Round-robin traffic through remote systems via SSH (overrides --threads)
 
-  -t THREADS, --threads THREADS
+  -t, --threads THREADS
                         Max number of concurrent requests (default: 1)
   -f, --force           Try all usernames/passwords even if they've been tried before
-  -d DELAY, --delay DELAY
-                        Sleep for this many seconds between requests
-  -ld LOCKOUT_DELAY, --lockout-delay LOCKOUT_DELAY
+  -d, --delay DELAY     Sleep for this many seconds between requests
+  -ld, --lockout-delay LOCKOUT_DELAY
                         Sleep for this many additional seconds when a lockout is encountered
-  -j JITTER, --jitter JITTER
-                        Add a random delay of up to this many seconds between requests
+  -j, --jitter JITTER   Add a random delay of up to this many seconds between requests
   -e, --exit-on-success
                         Stop spray when a valid cred is found
   -nl, --no-loot        Don't execute loot activites for valid accounts
@@ -180,20 +182,19 @@ advanced arguments:
 SSH Proxy:
   Round-robin traffic through remote systems via SSH (overrides --threads)
 
-  -s USER@SERVER [USER@SERVER ...], --ssh USER@SERVER [USER@SERVER ...]
+  -s, --ssh USER@SERVER [USER@SERVER ...]
                         Round-robin load-balance through these SSH hosts (user@host) NOTE: Current IP address is also used once per round
-  -i KEY, -k KEY, --key KEY
-                        Use this SSH key when connecting to proxy hosts
-  -b BASE_PORT, --base-port BASE_PORT
+  -i, -k, --key KEY     Use this SSH key when connecting to proxy hosts
+  -b, --base-port BASE_PORT
                         Base listening port to use for SOCKS proxies
   -n, --no-current-ip   Don't spray from the current IP, only use SSH proxies
 
 Subnet Proxy:
   Send traffic from random addresses within IP subnet
 
+  --subnet SUBNET       Subnet to send packets from
   --interface INTERFACE
                         Interface to send packets on
-  --subnet SUBNET       Subnet to send packets from
 ```
 
 ## Writing your own Spray Modules

