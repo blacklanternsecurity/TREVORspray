@@ -1,14 +1,14 @@
 import logging
 from .base import Enumerator
 
-log = logging.getLogger("trevorspray.enumerators.onedrive")
+log = logging.getLogger("trevorspray.enumerators.teams_photo")
 
 
-class OneDriveUserEnum(Enumerator):
+class TeamsPhotoUserEnum(Enumerator):
     # HTTP method
     method = "GET"
     # default target URL
-    default_url = "https://{tenantname}-my.sharepoint.com/personal/{username}_{domain}/_layouts/15/onedrive.aspx"
+    default_url = "https://{tenantname}-my.sharepoint.com/personal/{username}_{domain}/_layouts/15/userphoto.aspx"
 
     def initialize(self):
         # determine domain
@@ -35,7 +35,7 @@ class OneDriveUserEnum(Enumerator):
                 )
             else:
                 log.error(
-                    "Failed to confirm tenant name via OneDrive. To force, set the environment variable: TREVOR_tenantname=<tenantname>"
+                    "Failed to confirm tenant name via Teams photo. To force, set the environment variable: TREVOR_tenantname=<tenantname>"
                 )
                 return False
 
@@ -63,7 +63,7 @@ class OneDriveUserEnum(Enumerator):
         msg = f'Response code "{status_code}"'
 
         if response.status_code in [200, 401, 403, 302]:
-            msg = f'Confirmed valid user via OneDrive! (Response code "{status_code}")'
+            msg = f'Confirmed valid user via Teams photo! (Response code "{status_code}")'
             exists = True
 
-        return (valid, exists, locked, msg)
+        return (valid, exists, locked, msg) 
