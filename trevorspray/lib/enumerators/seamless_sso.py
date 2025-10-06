@@ -1,11 +1,11 @@
 import logging
 from contextlib import suppress
-from ..sprayers.base import BaseSprayModule
+from .base import Enumerator
 
 log = logging.getLogger("trevorspray.enumerators.seamless_sso")
 
 
-class SeamlessSSO(BaseSprayModule):
+class SeamlessSSO(Enumerator):
     # HTTP method
     method = "POST"
     # default target URL
@@ -22,8 +22,6 @@ class SeamlessSSO(BaseSprayModule):
     }
     # HTTP headers
     headers = {"Content-Type": "application/json"}
-    # How many times to retry HTTP requests
-    retries = 0
 
     def initialize(self):
         log.warning("Enumerating users via the SeamlessSSO method is unreliable.")

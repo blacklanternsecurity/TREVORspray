@@ -1,19 +1,13 @@
 import uuid
 import logging
 from contextlib import suppress
-from .base import BaseSprayModule
+from .msol import MSOL
 from ..looters.msol import MSOLLooter
 
 log = logging.getLogger("trevorspray.sprayers.officehome")
 
 
-class OfficeHome(BaseSprayModule):
-    # default target URL
-    default_url = "https://login.microsoft.com/common/oauth2/token"
-    ipv6_url = "https://prdv6a.aadg.msidentity.com/common/oauth2/token"
-
-    fail_nonexistent = False
-
+class OfficeHome(MSOL):
     request_data = {
         "resource": "4765445b-32c6-49b0-83e6-1d93765276ca",  # OfficeHome
         "client_id": "4765445b-32c6-49b0-83e6-1d93765276ca",  # OfficeHome
@@ -29,124 +23,3 @@ class OfficeHome(BaseSprayModule):
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
     }
-
-    looter = MSOLLooter
-
-    def initialize(self):
-        if self.trevor.options.prefer_ipv6 and self.url == self.ipv6_url:
-            self.headers["Host"] = "login.microsoft.com"
-
-        discovery = self.trevor.discovery(self.trevor.domain)
-        if discovery is not None:
-            userrealm = discovery.getuserrealm()
-            namespace = userrealm.get("NameSpaceType", "Unknown")
-            if namespace == "Federated":
-                log.warning(
-                    f'NameSpaceType for {self.trevor.domain} is "{namespace}", not "Managed". You may want to try the "adfs" module instead.'
-                )
-
-        return True
-
-    def create_request(self, *args, **kwargs):
-        request = super().create_request(*args, **kwargs)
-        if self.trevor.options.random_useragent:
-            request.data["client_id"] = str(uuid.uuid4())
-        return request
-
-    def check_response(self, response):
-        exists = False
-        valid = False
-        locked = False
-        msg = ""
-
-        status_code = getattr(response, "status_code", 0)
-
-        if status_code == 200:
-            exists = True
-            valid = True
-
-        else:
-            r = {}
-            with suppress(Exception):
-                r = response.json()
-                exists = True
-
-            error = r.get("error_description", "")
-            if error:
-                log.debug(error)
-
-            if "AADSTS50126" in error:
-                msg = f"AADSTS50126: Invalid email or password. Account could exist."
-
-            elif "AADSTS50128" in error or "AADSTS50059" in error:
-                exists = False
-                msg = f"AADSTS50128: Tenant for account doesn't exist. Check the domain to make sure they are using Azure/O365 services."
-
-            elif "AADSTS90072" in error:
-                valid = True
-                msg = f"AADSTS90072: Valid credential, but not for this tenant."
-
-            elif "AADSTS530031" in error:
-                valid = True
-                msg = f"AADSTS530031: Valid credential, but access policy does not allow token issuance."
-
-            elif "AADSTS53003" in error:
-                valid = True
-                msg = f"AADSTS53003: Valid credential, but access blocked by Conditional Access policies."
-
-            elif "AADSTS50034" in error:
-                exists = False
-                msg = f"AADSTS50034: User does not exist."
-
-            elif "AADSTS900023" in error:
-                exists = False
-                msg = f"AADSTS900023: No tenant registered for this domain or invalid domain."
-
-            elif "AADSTS50076" in error:
-                valid = True
-                # Microsoft MFA response
-                msg = f"AADSTS50076: The response indicates MFA (Microsoft) is in use."
-
-            elif "AADSTS50079" in error:
-                valid = True
-                # Microsoft MFA response
-                msg = f"AADSTS50079: The response indicates MFA (Microsoft) must be onboarded!"
-
-            elif "AADSTS50055" in error:
-                valid = True
-                # User password is expired
-                msg = f"AADSTS50055: The user's password is expired."
-
-            elif "AADSTS50131" in error:
-                valid = True
-                # Password is correct but login was blocked
-                msg = "AADSTS50131: Correct password but login was blocked."
-
-            elif "AADSTS50158" in error:
-                valid = True
-                # Conditional Access response (Based off of limited testing this seems to be the response to DUO MFA)
-                msg = "AADSTS50158: The response indicates conditional access (MFA: DUO or other) is in use."
-
-            elif "AADSTS50053" in error:
-                locked = True
-                exists = None  # M$ gets nasty and sometimes lies about this
-                # Locked out account or Smart Lockout in place
-                msg = f"AADSTS50053: Account appears to be locked."
-
-            elif "AADSTS50056" in error:
-                msg = f"AADSTS50056: Account exists but does not have a password in Azure AD."
-
-            elif "AADSTS80014" in error:
-                msg = f"AADSTS80014: Account exists, but the maximum Pass-through Authentication time was exceeded."
-
-            elif "AADSTS50057" in error:
-                # Disabled account
-                msg = f"AADSTS50057: The account appears to be disabled."
-
-            else:
-                valid = None
-                exists = None
-                content = getattr(response, "content", "")
-                msg = f"HTTP {status_code}: Got an error we haven't seen yet: {(r if r else content)}"
-
-        return (valid, exists, locked, msg) 

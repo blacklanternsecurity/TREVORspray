@@ -1,16 +1,14 @@
 import logging
-from ..sprayers.base import BaseSprayModule
+from .base import Enumerator
 
 log = logging.getLogger("trevorspray.enumerators.onedrive")
 
 
-class OneDriveUserEnum(BaseSprayModule):
+class OneDriveUserEnum(Enumerator):
     # HTTP method
     method = "GET"
     # default target URL
     default_url = "https://{tenantname}-my.sharepoint.com/personal/{username}_{domain}/_layouts/15/onedrive.aspx"
-    # How many times to retry HTTP requests
-    retries = 0
 
     def initialize(self):
         # determine domain

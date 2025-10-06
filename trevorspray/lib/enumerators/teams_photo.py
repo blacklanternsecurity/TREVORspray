@@ -9,8 +9,6 @@ class TeamsPhotoUserEnum(Enumerator):
     method = "GET"
     # default target URL
     default_url = "https://{tenantname}-my.sharepoint.com/personal/{username}_{domain}/_layouts/15/userphoto.aspx"
-    # How many times to retry HTTP requests
-    retries = 0
 
     def initialize(self):
         # determine domain
