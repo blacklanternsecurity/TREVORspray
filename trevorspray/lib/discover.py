@@ -47,7 +47,11 @@ class DomainDiscovery:
 
         self.printjson(self.getuserrealm())
         self.printjson(self.autodiscover())
-        self.owa()
+        
+        if not self.trevor.options.skip_owa:
+            self.owa()
+        else:
+            log.info("Skipping OWA discovery")
 
         msoldomains = self.msoldomains()
         if msoldomains:
