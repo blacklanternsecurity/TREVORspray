@@ -75,6 +75,11 @@ def main():
         metavar="FILE",
         help="Export all discovered tenant domains to a file",
     )
+    basic_group.add_argument(
+        "--skip-owa",
+        action="store_true",
+        help="Skip OWA discovery when --recon is used",
+    )
 
     advanced_group = parser.add_argument_group(
         title="advanced arguments",
