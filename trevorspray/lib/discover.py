@@ -140,44 +140,19 @@ class DomainDiscovery:
 
     def msoldomains(self):
         if self._msoldomains is None:
-            url = "https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc"
-
-            data = f"""<?xml version="1.0" encoding="utf-8"?>
-    <soap:Envelope xmlns:exm="http://schemas.microsoft.com/exchange/services/2006/messages" xmlns:ext="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:a="http://www.w3.org/2005/08/addressing" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-        <soap:Header>
-            <a:Action soap:mustUnderstand="1">http://schemas.microsoft.com/exchange/2010/Autodiscover/Autodiscover/GetFederationInformation</a:Action>
-            <a:To soap:mustUnderstand="1">https://autodiscover-s.outlook.com/autodiscover/autodiscover.svc</a:To>
-            <a:ReplyTo>
-                <a:Address>http://www.w3.org/2005/08/addressing/anonymous</a:Address>
-            </a:ReplyTo>
-        </soap:Header>
-        <soap:Body>
-            <GetFederationInformationRequestMessage xmlns="http://schemas.microsoft.com/exchange/2010/Autodiscover">
-                <Request>
-                    <Domain>{self.domain}</Domain>
-                </Request>
-            </GetFederationInformationRequestMessage>
-        </soap:Body>
-    </soap:Envelope>"""
-
-            headers = {
-                "Content-Type": "text/xml; charset=utf-8",
-                "SOAPAction": '"http://schemas.microsoft.com/exchange/2010/Autodiscover/Autodiscover/GetFederationInformation"',
-                "User-Agent": "AutodiscoverClient",
-                "Accept-Encoding": "identity",
-            }
-
+            url = f"https://azmap.dev/api/tenant?domain={self.domain}&extract=true"
             log.info(f"Retrieving tenant domains at {url}")
 
-            response = request("POST", url, headers=headers, data=data)
+            domains = []
+            with suppress(Exception):
+                response = request(url=url)
+                data = response.json()
 
-            r = re.compile(r"<Domain>([^<>/]*)</Domain>", re.I)
-            domains = list(set(r.findall(response.text)))
+                tenant_name = data.get("tenant_name", "")
+                if tenant_name:
+                    self.tenantnames.append(tenant_name)
 
-            for domain in domains:
-                # Check if this is "the initial" domain (tenantname)
-                if domain.lower().endswith(".onmicrosoft.com"):
-                    self.tenantnames.append(domain.split(".")[0])
+                domains = data.get("email_domains", [])
 
             if self.tenantnames:
                 log.success(f'Found tenant names: "{", ".join(self.tenantnames)}"')
