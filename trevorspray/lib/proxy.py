@@ -48,6 +48,7 @@ class ProxyThread(threading.Thread):
 
         self.proxy = None
         self.proxy_arg = None
+        self.aws_gateway = kwargs.pop("aws_gateway", None)
 
         if host == "<subnet>":
             self.proxy = str(self.trevor.options.subnet)
@@ -288,6 +289,16 @@ class ProxyThread(threading.Thread):
                 prepared_request.headers[
                     "User-Agent"
                 ] = f"{current_useragent} {random.randint(0,99999)}.{random.randint(0,99999)}"
+
+            # AWS API Gateway IP rotation: rewrite URL through a random gateway
+            if self.aws_gateway is not None:
+                original_url = prepared_request.url
+                prepared_request.url = self.aws_gateway.get_proxy_url(original_url)
+                # Remove Host header so requests lib sets it to the gateway host
+                prepared_request.headers.pop("Host", None)
+                log.debug(
+                    f"AWS Gateway rewrite: {original_url} -> {prepared_request.url}"
+                )
 
             kwargs = {
                 "timeout": self.trevor.options.timeout,
