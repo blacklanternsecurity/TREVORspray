@@ -200,15 +200,70 @@ def main():
     subnet_group.add_argument("--subnet", help="Subnet to send packets from")
     subnet_group.add_argument("--interface", help="Interface to send packets on")
 
+    aws_group = parser.add_argument_group(
+        title="AWS IP Rotation",
+        description="Rotate source IP using AWS API Gateway endpoints across multiple regions",
+    )
+    aws_group.add_argument(
+        "--aws",
+        action="store_true",
+        help="Enable IP rotation through AWS API Gateway",
+    )
+    aws_group.add_argument(
+        "--aws-regions",
+        nargs="+",
+        default=None,
+        metavar="REGION",
+        help="AWS regions to create API Gateways in (default: all available regions)",
+    )
+    aws_group.add_argument(
+        "--aws-profile",
+        default=None,
+        help="AWS profile name to use from ~/.aws/credentials",
+    )
+    aws_group.add_argument(
+        "--aws-access-key",
+        default=None,
+        help="AWS access key ID (alternative to --aws-profile)",
+    )
+    aws_group.add_argument(
+        "--aws-secret-key",
+        default=None,
+        help="AWS secret access key (alternative to --aws-profile)",
+    )
+    aws_group.add_argument(
+        "--aws-clear-creds",
+        action="store_true",
+        help="Delete saved AWS credentials from ~/.trevorspray/aws_config.ini and exit",
+    )
+
     try:
         log.info(f'Command: {" ".join(sys.argv)}')
 
         options = parser.parse_args()
 
+        # Handle --aws-clear-creds
+        if options.aws_clear_creds:
+            from .lib.aws_gateway import AWS_CONFIG_FILE
+            if AWS_CONFIG_FILE.exists():
+                AWS_CONFIG_FILE.unlink()
+                log.info(f"Deleted saved AWS credentials from {AWS_CONFIG_FILE}")
+            else:
+                log.info(f"No saved AWS credentials found at {AWS_CONFIG_FILE}")
+            sys.exit(0)
+
         conflicting_options = [options.subnet, options.ssh, options.proxy]
+        if options.aws:
+            conflicting_options.append("aws")
         if conflicting_options.count(None) + conflicting_options.count([]) < 2:
-            log.error("Cannot specify --ssh, --subnet, or --proxy together")
+            log.error("Cannot specify --ssh, --subnet, --proxy, or --aws together")
             sys.exit(1)
+
+        if options.aws:
+            if options.aws_regions:
+                log.info(f"AWS IP rotation enabled in {len(options.aws_regions)} regions")
+            else:
+                log.info("AWS IP rotation enabled in all available regions")
 
         if options.ssh and options.threads:
             log.warning(

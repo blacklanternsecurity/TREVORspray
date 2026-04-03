@@ -11,6 +11,7 @@ from tldextract import tldextract
 from .errors import TREVORSprayError
 from .discover import DomainDiscovery
 from .proxy import ProxyThread, SubnetThread
+from .aws_gateway import AWSGatewayManager
 
 log = logging.getLogger("trevorspray.sprayer")
 
@@ -39,6 +40,8 @@ class TrevorSpray:
         self._domain = None
 
         self.proxies = []
+        self.aws_gateway_manager = None
+
         if options.ssh:
             threads = options.ssh + ([] if options.no_current_ip else [None])
         elif options.subnet:
@@ -51,6 +54,17 @@ class TrevorSpray:
             self.subnet_proxy = SubnetThread(trevor=self, daemon=True)
             self.subnet_proxy.start()
 
+        # Initialize AWS API Gateway IP rotation
+        if getattr(options, "aws", False):
+            aws_regions = getattr(options, "aws_regions", None)
+            self.aws_gateway_manager = AWSGatewayManager(
+                target_url=options.url or "",
+                regions=aws_regions,
+                profile=getattr(options, "aws_profile", None),
+                access_key=getattr(options, "aws_access_key", None),
+                secret_key=getattr(options, "aws_secret_key", None),
+            )
+
         initial_delay_increment = (options.delay + (options.jitter / 2)) / max(
             1, len(options.ssh)
         )
@@ -59,6 +73,7 @@ class TrevorSpray:
                 trevor=self,
                 host=ssh_host,
                 proxy_port=options.base_port + i,
+                aws_gateway=self.aws_gateway_manager,
                 daemon=True,
             )
             if options.ssh or options.threads:
@@ -107,6 +122,17 @@ class TrevorSpray:
 
     def go(self):
         try:
+            # Start AWS API Gateways before spraying
+            if self.aws_gateway_manager is not None:
+                # Set target URL from sprayer if not already set via --url
+                if not self.aws_gateway_manager.target_url and self.sprayer.url:
+                    from urllib.parse import urlparse
+                    self.aws_gateway_manager.target_url = self.sprayer.url
+                    parsed = urlparse(self.sprayer.url)
+                    self.aws_gateway_manager.target_host = parsed.hostname
+                    self.aws_gateway_manager.target_scheme = parsed.scheme or "https"
+                self.aws_gateway_manager.start()
+
             self.start()
 
             if self.options.recon:
@@ -218,6 +244,10 @@ class TrevorSpray:
                 proxy.stop()
         with suppress(Exception):
             self.subnet_proxy.stop()
+        # cleanup AWS API Gateways
+        if self.aws_gateway_manager is not None:
+            with suppress(Exception):
+                self.aws_gateway_manager.stop()
         # write valid users
         util.update_file(self.existent_users_file, self.existent_users)
         log.info(

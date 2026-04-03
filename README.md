@@ -28,6 +28,7 @@ See the accompanying [**Blog Post**](blogpost.md) for a fun rant and some cool d
 - Tells you the status of each account: if it exists, is locked, has MFA enabled, etc.
 - Automatic cancel/resume (remembers already-tried user/pass combos in `~/.trevorspray/tried_logins.txt`)
 - Round-robin proxy through multiple IPs with `--ssh` or `--subnet`
+- **AWS API Gateway IP rotation** with `--aws` (each request gets a different source IP)
 - Automatic infinite reconnect/retry if a proxy goes down (or if you lose internet)
 - Spoofs `User-Agent` and other signatures to look like legitimate auth traffic
 - Comprehensive logging
@@ -92,6 +93,28 @@ trevorspray -u bob@evilcorp.com -p 'Welcome123' --delay 5
 ```bash
 trevorspray -u emails.txt -p 'Welcome123' --ssh root@1.2.3.4 root@4.3.2.1
 ```
+
+## Example: Spray with AWS IP rotation (different source IP per request)
+```bash
+# install with AWS support
+pip install trevorspray[aws]
+
+# spray using AWS API Gateway IP rotation (will prompt for AWS keys on first run)
+trevorspray -u emails.txt -p 'Welcome123' --aws
+
+# specify AWS credentials directly
+trevorspray -u emails.txt -p 'Welcome123' --aws --aws-access-key AKIA... --aws-secret-key ...
+
+# use a specific AWS profile
+trevorspray -u emails.txt -p 'Welcome123' --aws --aws-profile myprofile
+
+# limit to specific AWS regions
+trevorspray -u emails.txt -p 'Welcome123' --aws --aws-regions us-east-1 eu-west-1 ap-southeast-1
+
+# clear saved AWS credentials
+trevorspray --aws-clear-creds
+```
+> **Note:** Requires an AWS account with API Gateway permissions. API Gateways are created automatically across multiple regions and cleaned up on exit. Credentials are saved to `~/.trevorspray/aws_config.ini` for future use.
 
 ## Example: Find valid usernames without OSINT >:D
 ```bash
@@ -195,6 +218,20 @@ Subnet Proxy:
   --subnet SUBNET       Subnet to send packets from
   --interface INTERFACE
                         Interface to send packets on
+
+AWS IP Rotation:
+  Rotate source IP using AWS API Gateway endpoints across multiple regions
+
+  --aws                 Enable IP rotation through AWS API Gateway
+  --aws-regions REGION [REGION ...]
+                        AWS regions to create API Gateways in (default: all available regions)
+  --aws-profile AWS_PROFILE
+                        AWS profile name to use from ~/.aws/credentials
+  --aws-access-key AWS_ACCESS_KEY
+                        AWS access key ID (alternative to --aws-profile)
+  --aws-secret-key AWS_SECRET_KEY
+                        AWS secret access key (alternative to --aws-profile)
+  --aws-clear-creds     Delete saved AWS credentials from ~/.trevorspray/aws_config.ini and exit
 ```
 
 ## Writing your own Spray Modules
