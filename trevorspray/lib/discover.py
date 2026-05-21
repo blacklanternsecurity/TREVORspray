@@ -29,6 +29,7 @@ class DomainDiscovery:
         self._msoldomains = None
         self._owa = None
         self._onedrive_tenantnames = None
+        self._dkim_tenantnames = None
         self.tenantnames = []
 
     def recon(self):
@@ -47,7 +48,9 @@ class DomainDiscovery:
 
         self.printjson(self.getuserrealm())
         self.printjson(self.autodiscover())
-        
+
+        self.dkim_tenantnames()
+
         if not self.trevor.options.skip_owa:
             self.owa()
         else:
@@ -126,6 +129,69 @@ class DomainDiscovery:
 
         return self._txtrecords
 
+    def dkim_tenantnames(self):
+        """
+        Resolve selector1/selector2 _domainkey CNAMEs to extract the Microsoft 365
+        tenant name (e.g. tesla.com -> teslamotorsinc). Works against both the
+        legacy onmicrosoft.com targets and the newer .microsoft gTLD variant.
+        Reference: https://www.sprocketsecurity.com/blog/tenant-enumeration-is-dead
+        """
+        if self._dkim_tenantnames is not None:
+            return self._dkim_tenantnames
+
+        selectors = ("selector1", "selector2")
+        # Captures the tenant label between "._domainkey." and the Microsoft suffix.
+        # Legacy: <tenant>.onmicrosoft.com   New gTLD: <tenant>.microsoft
+        cname_regex = re.compile(
+            r"\._domainkey\.([a-z0-9-]+)\.(?:onmicrosoft\.com|microsoft)\.?$",
+            re.I,
+        )
+
+        found = []
+        for selector in selectors:
+            qname = f"{selector}._domainkey.{self.domain}"
+            log.info(f"Resolving DKIM selector CNAME at {qname}")
+            try:
+                answers = dns.resolver.query(qname, "CNAME")
+            except Exception as e:
+                log.debug(f"DKIM lookup for {qname} failed: {e}")
+                continue
+            for rdata in answers:
+                target = rdata.to_text().strip().lower()
+                match = cname_regex.search(target)
+                if match:
+                    tenantname = match.group(1)
+                    log.success(
+                        f'Found tenant "{tenantname}" via DKIM selector {qname} -> {target}'
+                    )
+                    found.append(tenantname)
+                else:
+                    log.debug(f"DKIM CNAME {target} did not match Microsoft pattern")
+
+        # Dedupe while preserving order, and merge into the shared tenant list.
+        seen = set()
+        unique = []
+        for name in found:
+            if name not in seen:
+                seen.add(name)
+                unique.append(name)
+        for name in unique:
+            if name not in self.tenantnames:
+                self.tenantnames.append(name)
+
+        if not unique:
+            log.warning(
+                f"No DKIM selector CNAMEs found for {self.domain}. "
+                "This domain may not have DKIM signing configured through "
+                "Exchange Online (third-party gateways like Proofpoint/Mimecast "
+                "typically won't expose it). Tenant names can still be recovered "
+                "by brute-forcing the <tenant>.onmicrosoft.com namespace, but "
+                "TREVORspray does not implement that technique."
+            )
+
+        self._dkim_tenantnames = unique
+        return self._dkim_tenantnames
+
     def autodiscover(self):
         if self._autodiscover is None:
             url = f"https://outlook.office365.com/autodiscover/autodiscover.json/v1.0/test@{self.domain}?Protocol=Autodiscoverv1"
@@ -149,7 +215,7 @@ class DomainDiscovery:
                 data = response.json()
 
                 tenant_name = data.get("tenant_name", "")
-                if tenant_name:
+                if tenant_name and tenant_name not in self.tenantnames:
                     self.tenantnames.append(tenant_name)
 
                 domains = data.get("email_domains", [])

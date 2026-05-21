@@ -22,6 +22,7 @@ sys.path.append(str(package_path))
 
 import lib.util as util
 from .lib import sprayers
+from .lib import enumerators
 from .lib.trevor import TrevorSpray
 from .lib.errors import TREVORSprayError
 
@@ -79,6 +80,12 @@ def main():
         "--skip-owa",
         action="store_true",
         help="Skip OWA discovery when --recon is used",
+    )
+    basic_group.add_argument(
+        "-ue",
+        "--user-enum",
+        choices=list(enumerators.module_choices.keys()),
+        help="User enumeration method to use (skips the interactive prompt)",
     )
 
     advanced_group = parser.add_argument_group(
@@ -208,6 +215,13 @@ def main():
         conflicting_options = [options.subnet, options.ssh, options.proxy]
         if conflicting_options.count(None) + conflicting_options.count([]) < 2:
             log.error("Cannot specify --ssh, --subnet, or --proxy together")
+            sys.exit(1)
+
+        if options.user_enum and not (options.recon and options.users):
+            log.error(
+                "--user-enum/-ue requires both --recon and --users (user "
+                "enumeration only runs in that combination)"
+            )
             sys.exit(1)
 
         if options.ssh and options.threads:
