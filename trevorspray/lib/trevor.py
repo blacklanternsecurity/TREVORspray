@@ -71,7 +71,9 @@ class TrevorSpray:
             log.info(f"User enumeration enabled with --recon and --users")
             self.user_enum = True
             choices = list(enumerators.module_choices.keys())
-            choice = self.runtimeparams.get("userenum_method", "")
+            choice = getattr(self.options, "user_enum", None) or self.runtimeparams.get(
+                "userenum_method", ""
+            )
             while not choice:
                 log.info(
                     f'Choosing user enumeration method (skip by exporting TREVOR_userenum_method={"|".join(choices)})'
