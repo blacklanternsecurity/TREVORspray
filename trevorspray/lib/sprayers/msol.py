@@ -15,8 +15,8 @@ class MSOL(BaseSprayModule):
     fail_nonexistent = False
 
     request_data = {
-        "resource": "https://graph.windows.net",
-        "client_id": "38aa3b87-a06d-4817-b275-7a316988d93b",
+        "resource": "https://graph.microsoft.com",
+        "client_id": "d3590ed6-52b3-4102-aeff-aad2292ab01c",
         "client_info": "1",
         "grant_type": "password",
         "scope": "openid",
@@ -126,6 +126,14 @@ class MSOL(BaseSprayModule):
                 valid = True
                 # Conditional Access response (Based off of limited testing this seems to be the response to DUO MFA)
                 msg = "AADSTS50158: The response indicates conditional access (MFA: DUO or other) is in use."
+            
+            elif "AADSTS500014" in error:
+                valid = True
+                msg = f"AADSTS500014: The service principal for the resource is disabled."
+            
+            elif "AADSTS50001" in error:
+                valid = True
+                msg = f"AADSTS50001: The resource is disabled or doesn't exist."
 
             elif "AADSTS50053" in error:
                 locked = True
