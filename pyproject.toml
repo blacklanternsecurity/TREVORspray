@@ -3,7 +3,7 @@ name = "trevorspray"
 version = "2.4.0"
 description = "A modular password sprayer with threading, SSH proxying, loot modules, and more"
 authors = ["TheTechromancer"]
-license = "GPL-3.0"
+license = "AGPL-3.0"
 repository = "https://github.com/blacklanternsecurity/TREVORspray"
 homepage = "https://github.com/blacklanternsecurity/TREVORspray"
 
