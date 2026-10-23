@@ -3,7 +3,7 @@ TREVORspray is a modular password sprayer with threading, SSH proxying, loot mod
 
 By [@thetechr0mancer](https://twitter.com/thetechr0mancer)
 
-[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://raw.githubusercontent.com/blacklanternsecurity/nmappalyzer/master/LICENSE)
+[![License](https://img.shields.io/badge/license-AGPLv3-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.6+-blue)](https://www.python.org)
 
 ## Installation:
