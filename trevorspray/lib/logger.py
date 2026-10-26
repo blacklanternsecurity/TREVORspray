@@ -9,48 +9,43 @@ from pathlib import Path
 
 
 class ColoredFormatter(logging.Formatter):
-
     color_mapping = {
-        'DEBUG':    242, # grey
-        'VERBOSE':  242, # grey
-        'INFO':     69,  # blue
-        'SUCCESS':  118, # green
-        'WARNING':  208, # orange
-        'ERROR':    196, # red
-        'CRITICAL': 196, # red
+        "DEBUG": 242,  # grey
+        "VERBOSE": 242,  # grey
+        "INFO": 69,  # blue
+        "SUCCESS": 118,  # green
+        "WARNING": 208,  # orange
+        "ERROR": 196,  # red
+        "CRITICAL": 196,  # red
     }
 
     char_mapping = {
-        'DEBUG':    'DBUG',
-        'VERBOSE':  'VERB',
-        'INFO':     'INFO',
-        'SUCCESS':  'SUCC',
-        'WARNING':  'WARN',
-        'ERROR':    'ERRR',
-        'CRITICAL': 'CRIT',
+        "DEBUG": "DBUG",
+        "VERBOSE": "VERB",
+        "INFO": "INFO",
+        "SUCCESS": "SUCC",
+        "WARNING": "WARN",
+        "ERROR": "ERRR",
+        "CRITICAL": "CRIT",
     }
 
-    prefix = '\033[1;38;5;'
-    suffix = '\033[0m'
+    prefix = "\033[1;38;5;"
+    suffix = "\033[0m"
 
     def __init__(self, pattern):
-
         super().__init__(pattern)
 
-
     def format(self, record):
-
         colored_record = copy(record)
         levelname = colored_record.levelname
-        levelchar = self.char_mapping.get(levelname, 'INFO')
-        seq = self.color_mapping.get(levelname, 15) # default white
-        colored_levelname = f'{self.prefix}{seq}m[{levelchar}]{self.suffix}'
-        if levelname == 'CRITICAL':
-            colored_record.msg = f'{self.prefix}{seq}m{colored_record.msg}{self.suffix}'
+        levelchar = self.char_mapping.get(levelname, "INFO")
+        seq = self.color_mapping.get(levelname, 15)  # default white
+        colored_levelname = f"{self.prefix}{seq}m[{levelchar}]{self.suffix}"
+        if levelname == "CRITICAL":
+            colored_record.msg = f"{self.prefix}{seq}m{colored_record.msg}{self.suffix}"
         colored_record.levelname = colored_levelname
 
         return logging.Formatter.format(self, colored_record)
-
 
 
 def addLoggingLevel(levelName, levelNum, methodName=None):
@@ -66,7 +61,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
     To avoid accidental clobberings of existing attributes, this method will
     raise an `AttributeError` if the level name is already an attribute of the
-    `logging` module or if the method name is already present 
+    `logging` module or if the method name is already present
 
     Example
     -------
@@ -82,11 +77,11 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
         methodName = levelName.lower()
 
     if hasattr(logging, levelName):
-       raise AttributeError('{} already defined in logging module'.format(levelName))
+        raise AttributeError("{} already defined in logging module".format(levelName))
     if hasattr(logging, methodName):
-       raise AttributeError('{} already defined in logging module'.format(methodName))
+        raise AttributeError("{} already defined in logging module".format(methodName))
     if hasattr(logging.getLoggerClass(), methodName):
-       raise AttributeError('{} already defined in logger class'.format(methodName))
+        raise AttributeError("{} already defined in logger class".format(methodName))
 
     # This method was inspired by the answers to Stack Overflow post
     # http://stackoverflow.com/q/2183233/2988730, especially
@@ -94,6 +89,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
     def logForLevel(self, message, *args, **kwargs):
         if self.isEnabledFor(levelNum):
             self._log(levelNum, message, args, **kwargs)
+
     def logToRoot(message, *args, **kwargs):
         logging.log(levelNum, message, *args, **kwargs)
 
@@ -104,30 +100,30 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 
 
 # custom logging levels
-addLoggingLevel('SUCCESS', 25)
-addLoggingLevel('VERBOSE', 15)
+addLoggingLevel("SUCCESS", 25)
+addLoggingLevel("VERBOSE", 15)
 
 
 ### LOG TO STDOUT AND FILE ###
 
-log_dir = Path.home() / '.trevorspray'
-log_file = log_dir / 'trevorspray.log'
+log_dir = Path.home() / ".trevorspray"
+log_file = log_dir / "trevorspray.log"
 log_dir.mkdir(exist_ok=True)
 
 console_handler = logging.StreamHandler(sys.stdout)
-if any([x.lower() in ['--debug', '--verbose', '-v'] for x in sys.argv]):
+if any([x.lower() in ["--debug", "--verbose", "-v"] for x in sys.argv]):
     console_handler.addFilter(lambda x: x.levelno >= logging.DEBUG)
 else:
     console_handler.addFilter(lambda x: x.levelno >= logging.VERBOSE)
-console_handler.setFormatter(ColoredFormatter('%(levelname)s %(message)s'))
+console_handler.setFormatter(ColoredFormatter("%(levelname)s %(message)s"))
 file_handler = logging.FileHandler(str(log_file))
 file_handler.addFilter(lambda x: x.levelno >= logging.DEBUG)
-file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
 
-root_logger = logging.getLogger('trevorspray')
+root_logger = logging.getLogger("trevorspray")
 root_logger.handlers = [console_handler, file_handler]
 root_logger.setLevel(logging.DEBUG)
 
-proxy_logger = logging.getLogger('trevorproxy')
+proxy_logger = logging.getLogger("trevorproxy")
 proxy_logger.handlers = [console_handler, file_handler]
 proxy_logger.setLevel(logging.DEBUG)
