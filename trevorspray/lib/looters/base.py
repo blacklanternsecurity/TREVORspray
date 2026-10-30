@@ -14,6 +14,11 @@ class Looter:
             if callable(getattr(self, func)) and func.startswith("looter_")
         ]
 
+    @property
+    def timeout(self): 
+        """Timeout in seconds from CLI --timeout (default 10).""" 
+        return getattr( getattr(self.sprayer.trevor, "options", None), "timeout", 10 )
+
     def run(self):
         log.info(f"Running loot module: {self.__class__.__name__}")
         for func in self.looters:
